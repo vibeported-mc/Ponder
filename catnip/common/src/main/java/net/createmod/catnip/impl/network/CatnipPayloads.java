@@ -12,7 +12,9 @@ public final class CatnipPayloads {
 	public static final Type<ClientboundSimpleActionPacket> SIMPLE_ACTION = registrar.clientbound("simple_action", ClientboundSimpleActionPacket.STREAM_CODEC);
 
 	// serverbound
-	public static final Type<ServerboundConfigPacket<?>> SERVERBOUND_CONFIG = registrar.selfHandlingServerbound("config/serverbound", ServerboundConfigPacket.STREAM_CODEC);
+	// TODO: restore alongside the config UI. ServerboundConfigPacket is the client asking the server
+	// to change a config value from the config screen, and it needs ConfigHelper, which cannot live
+	// in the common module because Forge Config API Port does not supply FML's ModConfig.
 
 	public static void init() {}
 }
