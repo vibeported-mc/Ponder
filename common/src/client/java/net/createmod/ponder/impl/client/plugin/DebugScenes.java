@@ -1,5 +1,6 @@
 package net.createmod.ponder.impl.client.plugin;
 
+import net.minecraft.world.item.DyeColor;
 import net.createmod.catnip.api.math.Pointing;
 import net.createmod.ponder.api.client.PonderPalette;
 import net.createmod.ponder.api.client.element.ElementLink;
@@ -87,7 +88,7 @@ public class DebugScenes {
 			.text("Blocks can be modified");
 		scene.idle(20);
 		scene.world().replaceBlocks(util.select().fromTo(1, 1, 3, 2, 2, 4),
-			Blocks.WHITE_CONCRETE.defaultBlockState(), true);
+			Blocks.CONCRETE.pick(DyeColor.WHITE).defaultBlockState(), true);
 		scene.idle(10);
 		scene.addKeyframe();
 		scene.world().replaceBlocks(util.select().position(3, 1, 1), Blocks.REDSTONE_WIRE.defaultBlockState().setValue(RedStoneWireBlock.POWER, 15), true);
@@ -367,7 +368,7 @@ public class DebugScenes {
 
 		scene.world().hideSection(hiddenReplaceArea, Direction.UP);
 		scene.idle(20);
-		scene.world().setBlocks(hiddenReplaceArea, Blocks.BLACK_CONCRETE.defaultBlockState(), false);
+		scene.world().setBlocks(hiddenReplaceArea, Blocks.CONCRETE.pick(DyeColor.BLACK).defaultBlockState(), false);
 		scene.world().showSection(hiddenReplaceArea, Direction.DOWN);
 		scene.idle(20);
 		scene.overlay().showOutlineWithText(hiddenReplaceArea, 30)

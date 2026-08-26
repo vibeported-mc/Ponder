@@ -12,9 +12,9 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 
 import net.createmod.catnip.api.client.render.BindableTexture;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.api.math.AngleHelper;
 import net.createmod.catnip.api.theme.Color;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.core.Direction;
 import net.minecraft.util.LightCoordsUtil;
@@ -39,7 +39,18 @@ public abstract class Outline {
 		return params;
 	}
 
-	public abstract void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt);
+	/**
+	 * Minecraft 26.2 removed MultiBufferSource: geometry is submitted as nodes and drawn later by the
+	 * feature dispatcher, so outlines hand their drawing to the collector rather than writing into a
+	 * buffer they own.
+	 */
+	public abstract void submit(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt);
+
+	/** Submit order for geometry that used to go into SuperRenderTypeBuffer's early buffer. */
+	public static final int ORDER_EARLY = -1;
+
+	/** Submit order for geometry that used to go into SuperRenderTypeBuffer's late buffer. */
+	public static final int ORDER_LATE = 1;
 
 	public void tick() {
 	}

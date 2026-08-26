@@ -93,7 +93,7 @@ public class ConfirmationScreen extends AbstractSimiScreen {
 		this.source = source;
 		Minecraft client = ModClientHooksHelper.INSTANCE.getMinecraftFromScreen(source);
 		this.init(client.getWindow().getGuiScaledWidth(), client.getWindow().getGuiScaledHeight());
-		this.minecraft.screen = this;
+		this.minecraft.gui.screen() = this;
 	}
 
 	@Override
@@ -172,7 +172,7 @@ public class ConfirmationScreen extends AbstractSimiScreen {
 	}
 
 	private void accept(Response success) {
-		minecraft.screen = source;
+		minecraft.gui.screen() = source;
 		action.accept(success);
 	}
 

@@ -11,7 +11,8 @@ plugins {
 
 rootProject.name = "ponder"
 
-for (platform in listOf("common", "fabric", "neoforge")) {
+// NeoForge only: the Fabric modules are left in the tree but out of the build.
+for (platform in listOf("common", "neoforge")) {
     include(platform)
 
     include(":catnip:$platform")

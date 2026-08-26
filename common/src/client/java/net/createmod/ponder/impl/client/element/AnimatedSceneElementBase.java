@@ -10,7 +10,6 @@ import net.createmod.catnip.api.animation.LerpedFloat;
 import net.createmod.ponder.api.client.element.AnimatedSceneElement;
 import net.createmod.ponder.api.client.level.PonderLevel;
 import net.minecraft.client.Camera;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.util.LightCoordsUtil;
@@ -42,30 +41,30 @@ public abstract class AnimatedSceneElementBase extends PonderElementBase impleme
 	}
 
 	@Override
-	public final void renderLayer(PonderLevel world, MultiBufferSource buffer, ChunkSectionLayer layer,
+	public final void renderLayer(PonderLevel world, ChunkSectionLayer layer,
 								  SubmitNodeCollector queue, Camera camera, CameraRenderState cameraRenderState,
 								  PoseStack poseStack, float pt) {
 		poseStack.pushPose();
 		float currentFade = applyFade(poseStack, pt);
-		renderLayer(world, buffer, layer, queue, camera, cameraRenderState, poseStack, currentFade, pt);
+		renderLayer(world, layer, queue, camera, cameraRenderState, poseStack, currentFade, pt);
 		poseStack.popPose();
 	}
 
 	@Override
-	public final void renderFirst(PonderLevel world, MultiBufferSource buffer, SubmitNodeCollector queue,
+	public final void renderFirst(PonderLevel world, SubmitNodeCollector queue,
 								  Camera camera, CameraRenderState cameraRenderState, PoseStack poseStack, float pt) {
 		poseStack.pushPose();
 		float currentFade = applyFade(poseStack, pt);
-		renderFirst(world, buffer, queue, camera, cameraRenderState, poseStack, currentFade, pt);
+		renderFirst(world, queue, camera, cameraRenderState, poseStack, currentFade, pt);
 		poseStack.popPose();
 	}
 
 	@Override
-	public final void renderLast(PonderLevel world, MultiBufferSource buffer, SubmitNodeCollector queue, Camera camera,
+	public final void renderLast(PonderLevel world, SubmitNodeCollector queue, Camera camera,
 								 CameraRenderState cameraRenderState, PoseStack poseStack, float pt) {
 		poseStack.pushPose();
 		float currentFade = applyFade(poseStack, pt);
-		renderLast(world, buffer, queue, camera, cameraRenderState, poseStack, currentFade, pt);
+		renderLast(world, queue, camera, cameraRenderState, poseStack, currentFade, pt);
 		poseStack.popPose();
 	}
 
@@ -79,16 +78,16 @@ public abstract class AnimatedSceneElementBase extends PonderElementBase impleme
 		return currentFade;
 	}
 
-	protected void renderLayer(PonderLevel world, MultiBufferSource buffer, ChunkSectionLayer layer,
+	protected void renderLayer(PonderLevel world, ChunkSectionLayer layer,
 							   SubmitNodeCollector queue, Camera camera, CameraRenderState cameraRenderState,
 							   PoseStack poseStack, float fade, float pt) {
 	}
 
-	protected void renderFirst(PonderLevel world, MultiBufferSource buffer, SubmitNodeCollector queue, Camera camera,
+	protected void renderFirst(PonderLevel world, SubmitNodeCollector queue, Camera camera,
 							   CameraRenderState cameraRenderState, PoseStack poseStack, float fade, float pt) {
 	}
 
-	protected void renderLast(PonderLevel world, MultiBufferSource buffer, SubmitNodeCollector queue, Camera camera,
+	protected void renderLast(PonderLevel world, SubmitNodeCollector queue, Camera camera,
 							  CameraRenderState cameraRenderState, PoseStack poseStack, float fade, float pt) {
 	}
 

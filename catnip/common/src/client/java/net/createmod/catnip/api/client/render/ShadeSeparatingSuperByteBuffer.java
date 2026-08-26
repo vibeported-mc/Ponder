@@ -1,5 +1,7 @@
 package net.createmod.catnip.api.client.render;
 
+
+import net.minecraft.util.LightCoordsUtil;
 import org.joml.Matrix3f;
 import org.joml.Matrix4f;
 import org.joml.Vector3fc;
@@ -272,6 +274,6 @@ public class ShadeSeparatingSuperByteBuffer implements SuperByteBuffer {
 
 	private static int getLight(BlockAndTintGetter world, Vector4f lightPos) {
 		BlockPos pos = BlockPos.containing(lightPos.x(), lightPos.y(), lightPos.z());
-		return WORLD_LIGHT_CACHE.computeIfAbsent(pos.asLong(), $ -> LevelRenderer.getLightCoords(world, pos));
+		return WORLD_LIGHT_CACHE.computeIfAbsent(pos.asLong(), $ -> LightCoordsUtil.getLightCoords(world, pos));
 	}
 }

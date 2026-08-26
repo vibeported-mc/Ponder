@@ -123,7 +123,7 @@ public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 
 		// workaround while config type isn't available here yet.
 		ModConfig.Type configType = ModConfig.Type.CLIENT;
-		Screen screen = Minecraft.getInstance().screen;
+		Screen screen = Minecraft.getInstance().gui.screen();
 		if (screen instanceof SubMenuConfigScreen subMenuScreen) {
 			configType = subMenuScreen.type;
 		}

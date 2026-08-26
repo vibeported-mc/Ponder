@@ -17,8 +17,8 @@ public final class BakedModelBufferer {
 	private BakedModelBufferer() {
 	}
 
-	public static void submitModel(BlockStateModel model, BlockPos pos, BlockState state, @Nullable PoseStack poseStack, ShadeSeparatedBufferSource bufferSource, OrderedSubmitNodeCollector submitNodeCollector) {
-		ModClientHooksHelper.INSTANCE.submitModel(model, pos, state, poseStack, bufferSource, submitNodeCollector);
+	public static void submitModel(BlockStateModel model, BlockPos pos, BlockState state, @Nullable PoseStack poseStack, OrderedSubmitNodeCollector submitNodeCollector) {
+		ModClientHooksHelper.INSTANCE.submitModel(model, pos, state, poseStack, submitNodeCollector);
 	}
 
 	public static void bufferModel(BlockStateModel model, BlockPos pos, BlockAndTintGetter level, BlockState state, @Nullable PoseStack poseStack, ShadeSeparatedBufferSource bufferSource) {

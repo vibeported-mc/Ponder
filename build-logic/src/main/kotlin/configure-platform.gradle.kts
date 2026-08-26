@@ -79,6 +79,9 @@ tasks.processResources {
 if (parent!!.name != "testmod") {
     publishing {
         publications.create<MavenPublication>("mavenJava") {
+            // Without this the coordinate would be net.createmod.ponder:neoforge, since Gradle
+            // defaults the artifact id to the project name rather than the archives name.
+            artifactId = base.archivesName.get()
             from(components["java"])
         }
 
@@ -105,8 +108,10 @@ loom?.javaClass?.getMethod("splitEnvironmentSourceSets")?.run {
 extensions.getByType<PackageInfosExtension>().sources(sourceSets.named { it == "main" || it == "client" })
 
 if (name != "common") {
+    // The sibling common project, not the root one: catnip has its own.
+    val siblingCommon = parent!!.path + ":common"
     tasks.withType<Jar> {
-        dependsOn(project(":common").tasks.named("generatePackageInfos"))
+        dependsOn(project(siblingCommon).tasks.named("generatePackageInfos"))
     }
 }
 

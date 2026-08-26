@@ -1,5 +1,7 @@
 package net.createmod.catnip.api.client.outliner;
 
+
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import org.joml.Vector3d;
 import org.joml.Vector4f;
 
@@ -7,7 +9,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import net.createmod.catnip.api.client.render.PonderRenderTypes;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
@@ -28,16 +29,17 @@ public class LineOutline extends Outline {
 	}
 
 	@Override
-	public void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void submit(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt) {
 		float width = params.getLineWidth();
 		if (width == 0)
 			return;
 
-		VertexConsumer consumer = buffer.getBuffer(PonderRenderTypes.outlineSolid());
 		params.loadColor(colorTemp);
 		int lightmap = params.lightmap;
 		boolean disableLineNormals = params.disableLineNormals;
-		renderInner(ms, consumer, camera, pt, width, colorTemp, lightmap, disableLineNormals);
+		Vector4f color = new Vector4f(colorTemp);
+		queue.submitCustomGeometry(ms, PonderRenderTypes.outlineSolid(),
+			(pose, consumer) -> renderInner(ms, consumer, camera, pt, width, color, lightmap, disableLineNormals));
 	}
 
 	protected void renderInner(PoseStack ms, VertexConsumer consumer, Vec3 camera, float pt, float width,

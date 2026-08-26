@@ -1,5 +1,6 @@
 package net.createmod.ponder.api.client.element;
 
+import net.minecraft.world.entity.EntityTypes;
 import com.mojang.blaze3d.platform.Window;
 
 import net.createmod.catnip.api.math.AngleHelper;
@@ -27,7 +28,7 @@ public abstract class ParrotPose {
 	public abstract void tick(PonderScene scene, Parrot entity, Vec3 location);
 
 	public Parrot create(PonderLevel world) {
-		Parrot entity = new Parrot(EntityType.PARROT, world);
+		Parrot entity = new Parrot(EntityTypes.PARROT, world);
 		int nextInt = Ponder.RANDOM.nextInt(VARIANTS.length);
 		((ParrotAccessor) entity).ponder$setVariant(VARIANTS[nextInt]);
 		return entity;

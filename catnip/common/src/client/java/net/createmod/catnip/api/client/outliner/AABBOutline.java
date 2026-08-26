@@ -1,5 +1,7 @@
 package net.createmod.catnip.api.client.outliner;
 
+
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import org.joml.Vector3f;
 import org.joml.Vector4f;
 
@@ -8,7 +10,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import net.createmod.catnip.api.client.render.BindableTexture;
 import net.createmod.catnip.api.client.render.PonderRenderTypes;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.AABB;
@@ -41,15 +42,15 @@ public class AABBOutline extends Outline {
 	}
 
 	@Override
-	public void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void submit(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt) {
 		params.loadColor(colorTemp);
 		Vector4f color = colorTemp;
 		int lightmap = params.lightmap;
 		boolean disableLineNormals = params.disableLineNormals;
-		renderBox(ms, buffer, camera, bb, color, lightmap, disableLineNormals);
+		submitBox(ms, queue, camera, bb, color, lightmap, disableLineNormals);
 	}
 
-	protected void renderBox(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, AABB box, Vector4f color, int lightmap, boolean disableLineNormals) {
+	protected void submitBox(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, AABB box, Vector4f color, int lightmap, boolean disableLineNormals) {
 		Vector3f minPos = minPosTemp1;
 		Vector3f maxPos = maxPosTemp1;
 
@@ -61,27 +62,28 @@ public class AABBOutline extends Outline {
 		minPos.set((float) box.minX - inflate, (float) box.minY - inflate, (float) box.minZ - inflate);
 		maxPos.set((float) box.maxX + inflate, (float) box.maxY + inflate, (float) box.maxZ + inflate);
 
-		renderBoxFaces(ms, buffer, cull, params.getHighlightedFace(), minPos, maxPos, color, lightmap);
+		submitBoxFaces(ms, queue, cull, params.getHighlightedFace(), minPos, maxPos, color, lightmap);
 
 		float lineWidth = params.getLineWidth();
 		if (lineWidth == 0)
 			return;
 
-		VertexConsumer consumer = buffer.getBuffer(PonderRenderTypes.outlineSolid());
-		renderBoxEdges(ms, consumer, minPos, maxPos, lineWidth, color, lightmap, disableLineNormals);
+		Vector4f edgeColor = new Vector4f(color);
+		queue.submitCustomGeometry(ms, PonderRenderTypes.outlineSolid(),
+			(pose, consumer) -> {
+				PoseStack local = new PoseStack();
+				local.last().set(pose);
+				renderBoxEdges(local, consumer, minPos, maxPos, lineWidth, edgeColor, lightmap, disableLineNormals);
+			});
 	}
 
-	protected void renderBoxFaces(PoseStack ms, SuperRenderTypeBuffer buffer, boolean cull, Direction highlightedFace, Vector3f minPos, Vector3f maxPos, Vector4f color, int lightmap) {
-		PoseStack.Pose pose = ms.last();
-		renderBoxFace(pose, buffer, cull, highlightedFace, minPos, maxPos, Direction.DOWN, color, lightmap);
-		renderBoxFace(pose, buffer, cull, highlightedFace, minPos, maxPos, Direction.UP, color, lightmap);
-		renderBoxFace(pose, buffer, cull, highlightedFace, minPos, maxPos, Direction.NORTH, color, lightmap);
-		renderBoxFace(pose, buffer, cull, highlightedFace, minPos, maxPos, Direction.SOUTH, color, lightmap);
-		renderBoxFace(pose, buffer, cull, highlightedFace, minPos, maxPos, Direction.WEST, color, lightmap);
-		renderBoxFace(pose, buffer, cull, highlightedFace, minPos, maxPos, Direction.EAST, color, lightmap);
+	protected void submitBoxFaces(PoseStack ms, SubmitNodeCollector queue, boolean cull, Direction highlightedFace, Vector3f minPos, Vector3f maxPos, Vector4f color, int lightmap) {
+		for (Direction face : Direction.values()) {
+			submitBoxFace(ms, queue, cull, highlightedFace, minPos, maxPos, face, color, lightmap);
+		}
 	}
 
-	protected void renderBoxFace(PoseStack.Pose pose, SuperRenderTypeBuffer buffer, boolean cull, Direction highlightedFace, Vector3f minPos, Vector3f maxPos, Direction face, Vector4f color, int lightmap) {
+	protected void submitBoxFace(PoseStack ms, SubmitNodeCollector queue, boolean cull, Direction highlightedFace, Vector3f minPos, Vector3f maxPos, Direction face, Vector4f color, int lightmap) {
 		boolean highlighted = face == highlightedFace;
 
 		// TODO: Presumably, the other texture should be used, but this was not noticed before so fixing it may lead to suboptimal visuals.
@@ -91,13 +93,12 @@ public class AABBOutline extends Outline {
 			return;
 
 		RenderType renderType = PonderRenderTypes.outlineTranslucent(faceTexture.getId(), cull);
-		VertexConsumer consumer = buffer.getLateBuffer(renderType);
 
 		float alphaMult = highlighted ? 1 : 0.5f;
-		colorTemp1.set(color.x(), color.y(), color.z(), color.w() * alphaMult);
-		color = colorTemp1;
+		Vector4f faceColor = new Vector4f(color.x(), color.y(), color.z(), color.w() * alphaMult);
 
-		renderBoxFace(pose, consumer, minPos, maxPos, face, color, lightmap);
+		queue.order(ORDER_LATE)
+			.submitCustomGeometry(ms, renderType, (pose, consumer) -> renderBoxFace(pose, consumer, minPos, maxPos, face, faceColor, lightmap));
 	}
 
 	protected void renderBoxFace(PoseStack.Pose pose, VertexConsumer consumer, Vector3f minPos, Vector3f maxPos, Direction face, Vector4f color, int lightmap) {

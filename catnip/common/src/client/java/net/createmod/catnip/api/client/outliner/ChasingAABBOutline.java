@@ -1,8 +1,9 @@
 package net.createmod.catnip.api.client.outliner;
 
+
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
@@ -28,11 +29,11 @@ public class ChasingAABBOutline extends AABBOutline {
 	}
 
 	@Override
-	public void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void submit(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt) {
 		params.loadColor(colorTemp);
 		int lightmap = params.lightmap;
 		boolean disableLineNormals = params.disableLineNormals;
-		renderBox(ms, buffer, camera, interpolateBBs(prevBB, bb, pt), colorTemp, lightmap, disableLineNormals);
+		submitBox(ms, queue, camera, interpolateBBs(prevBB, bb, pt), colorTemp, lightmap, disableLineNormals);
 	}
 
 	private static AABB interpolateBBs(AABB current, AABB target, float pt) {

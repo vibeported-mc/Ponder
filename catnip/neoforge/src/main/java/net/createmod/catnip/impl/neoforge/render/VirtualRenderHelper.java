@@ -1,7 +1,7 @@
 package net.createmod.catnip.impl.neoforge.render;
 
 import dev.engine_room.flywheel.api.model.Model;
-import dev.engine_room.flywheel.lib.model.baked.BlockModelBuilder;
+import dev.engine_room.flywheel.lib.model.baked.BakedModelBuilder;
 import dev.engine_room.flywheel.lib.util.RendererReloadCache;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.level.block.state.BlockState;
@@ -13,7 +13,7 @@ public class VirtualRenderHelper {
 	public static final ModelProperty<Boolean> VIRTUAL_PROPERTY = new ModelProperty<>();
 	public static final ModelData VIRTUAL_DATA = ModelData.builder().with(VIRTUAL_PROPERTY, true).build();
 
-	private static final RendererReloadCache<BlockState, Model> VIRTUAL_BLOCKS = new RendererReloadCache<>(state -> new BlockModelBuilder(Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state)).build());
+	private static final RendererReloadCache<BlockState, Model> VIRTUAL_BLOCKS = new RendererReloadCache<>(state -> new BakedModelBuilder(Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state)).build());
 
 	public static boolean isVirtual(ModelData data) {
 		return data.has(VirtualRenderHelper.VIRTUAL_PROPERTY) && Boolean.TRUE.equals(data.get(VirtualRenderHelper.VIRTUAL_PROPERTY));

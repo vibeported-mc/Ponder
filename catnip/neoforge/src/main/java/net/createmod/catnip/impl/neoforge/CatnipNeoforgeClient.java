@@ -1,5 +1,7 @@
 package net.createmod.catnip.impl.neoforge;
 
+
+import java.util.function.Supplier;
 import java.util.function.Function;
 
 import net.createmod.catnip.api.Catnip;
@@ -23,7 +25,6 @@ import net.neoforged.fml.event.lifecycle.FMLLoadCompleteEvent;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.RegisterClientCommandsEvent;
 import net.neoforged.neoforge.client.event.RegisterPictureInPictureRenderersEvent;
-import net.neoforged.neoforge.client.event.RenderLevelStageEvent;
 import net.neoforged.neoforge.client.event.TextureAtlasStitchedEvent;
 
 @Mod(value = Catnip.ID, dist = Dist.CLIENT)
@@ -45,7 +46,7 @@ public final class CatnipNeoforgeClient {
 	private static void registerPictureInPictureRenderers(RegisterPictureInPictureRenderersEvent event) {
 		NeoForgeClientHooksHelper.PIP_RENDERERS.forEach((state, factory) -> {
 			//noinspection unchecked,rawtypes
-			event.register((Class<PictureInPictureRenderState>) state, (Function) factory);
+			event.register((Class<PictureInPictureRenderState>) state, (Supplier) factory);
 		});
 	}
 
@@ -79,13 +80,6 @@ public final class CatnipNeoforgeClient {
 		@SubscribeEvent
 		public static void afterClientTick(ClientTickEvent.Post event) {
 			ClientTickCallback.EVENT.post().invoker().onTick();
-		}
-
-		@SubscribeEvent
-		public static void onRenderLevel(RenderLevelStageEvent.AfterTranslucentFeatures event) {
-			LevelRenderCallback.AFTER_TRANSLUCENT_FEATURES.invoker().onRender(
-				event.getLevelRenderer(), event.getLevelRenderState(), event.getPoseStack()
-			);
 		}
 
 		@SubscribeEvent

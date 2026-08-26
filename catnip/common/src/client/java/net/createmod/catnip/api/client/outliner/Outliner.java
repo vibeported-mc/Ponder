@@ -1,5 +1,7 @@
 package net.createmod.catnip.api.client.outliner;
 
+
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -10,7 +12,6 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.createmod.catnip.api.client.outliner.LineOutline.EndChasingLineOutline;
 import net.createmod.catnip.api.client.outliner.Outline.OutlineParams;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.item.ItemStack;
@@ -157,7 +158,7 @@ public class Outliner {
 		}
 	}
 
-	public void renderOutlines(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void submitOutlines(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt) {
 		outlines.forEach((key, entry) -> {
 			Outline outline = entry.getOutline();
 			OutlineParams params = outline.getParams();
@@ -173,7 +174,7 @@ public class Outliner {
 				if (params.alpha < 1 / 8f)
 					return;
 			}
-			outline.render(ms, buffer, camera, pt);
+			outline.submit(ms, queue, camera, pt);
 		});
 	}
 

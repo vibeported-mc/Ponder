@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.util.Mth;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.Vec3;
@@ -63,10 +63,10 @@ public class GhostBlocks {
 		ghosts.entrySet().removeIf(e -> !e.getValue().isAlive());
 	}
 
-	public void renderAll(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera) {
+	public void submitAll(PoseStack ms, SubmitNodeCollector queue, Vec3 camera) {
 		ghosts.forEach((slot, entry) -> {
 			GhostBlockRenderer ghost = entry.ghost;
-			ghost.render(ms, buffer, camera, entry.params);
+			ghost.submit(ms, queue, camera, entry.params);
 		});
 	}
 

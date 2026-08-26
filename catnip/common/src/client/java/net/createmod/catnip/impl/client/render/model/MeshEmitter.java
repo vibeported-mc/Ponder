@@ -1,5 +1,7 @@
 package net.createmod.catnip.impl.client.render.model;
 
+
+import com.mojang.blaze3d.PrimitiveTopology;
 import org.jetbrains.annotations.UnknownNullability;
 
 import com.mojang.blaze3d.pipeline.RenderPipeline;
@@ -45,10 +47,10 @@ class MeshEmitter {
 
 	private void prepareForGeometry(boolean shade) {
 		if (bufferBuilder == null) {
-			bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+			bufferBuilder = new BufferBuilder(byteBufferBuilder, PrimitiveTopology.QUADS, DefaultVertexFormat.BLOCK);
 		} else if (shade != currentShade) {
 			emit();
-			bufferBuilder = new BufferBuilder(byteBufferBuilder, VertexFormat.Mode.QUADS, DefaultVertexFormat.BLOCK);
+			bufferBuilder = new BufferBuilder(byteBufferBuilder, PrimitiveTopology.QUADS, DefaultVertexFormat.BLOCK);
 		}
 
 		currentShade = shade;

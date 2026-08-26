@@ -1,5 +1,7 @@
 package net.createmod.catnip.impl.client;
 
+
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.createmod.catnip.api.Catnip;
@@ -17,10 +19,8 @@ import net.createmod.catnip.api.client.outliner.Outliner;
 import net.createmod.catnip.api.client.platform.ModClientHooksHelper;
 import net.createmod.catnip.api.client.render.CachedBuffers;
 import net.createmod.catnip.api.client.render.CatnipRenderPipelines;
-import net.createmod.catnip.api.client.render.DefaultSuperRenderTypeBuffer;
 import net.createmod.catnip.api.client.render.StitchedSprite;
 import net.createmod.catnip.api.client.render.SuperByteBufferCache;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.api.data.ReloadListenerRegistries;
 import net.createmod.catnip.impl.client.gui.element.pip.GuiBlockEntityRenderer;
 import net.createmod.catnip.impl.client.gui.element.pip.GuiBlockModelRenderer;
@@ -42,7 +42,7 @@ public final class CatnipClient {
 
 		ClientTickCallback.EVENT.pre().subscribe(CatnipClient::beforeClientTick);
 		LevelRendererReloadCallback.EVENT.subscribe(CatnipClient::onRendererReload);
-		LevelRenderCallback.AFTER_TRANSLUCENT_FEATURES.subscribe(CatnipClient::onLevelRender);
+		LevelRenderCallback.SUBMIT_FEATURES.subscribe(CatnipClient::onSubmitFeatures);
 		AtlasStitchedCallback.EVENT.subscribe(StitchedSprite::afterAtlasStitch);
 
 		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiBlockModelRenderState.class, GuiBlockModelRenderer::new);
@@ -70,17 +70,19 @@ public final class CatnipClient {
 		SuperByteBufferCache.getInstance().invalidate();
 	}
 
-	public static void onLevelRender(LevelRenderer renderer, LevelRenderState state, PoseStack transforms) {
-		Vec3 cameraPos = Minecraft.getInstance().gameRenderer.getMainCamera().position();
+	/**
+	 * Minecraft 26.2 collects render nodes before drawing them, so outlines and ghosts have to be
+	 * submitted during the submit phase rather than drawn during a render stage.
+	 */
+	public static void onSubmitFeatures(LevelRenderState state, SubmitNodeCollector queue, PoseStack transforms) {
+		Vec3 cameraPos = state.cameraRenderState.pos;
 		float partialTicks = AnimationTickHolder.getPartialTicks();
 
 		transforms.pushPose();
-		SuperRenderTypeBuffer buffer = DefaultSuperRenderTypeBuffer.getInstance();
 
-		GhostBlocks.getInstance().renderAll(transforms, buffer, cameraPos);
-		Outliner.getInstance().renderOutlines(transforms, buffer, cameraPos, partialTicks);
+		GhostBlocks.getInstance().submitAll(transforms, queue, cameraPos);
+		Outliner.getInstance().submitOutlines(transforms, queue, cameraPos, partialTicks);
 
-		buffer.draw();
 		transforms.popPose();
 	}
 

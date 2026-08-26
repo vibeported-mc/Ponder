@@ -1,5 +1,7 @@
 package net.createmod.ponder.impl.client.element;
 
+import net.minecraft.util.RandomSource;
+import net.minecraft.client.renderer.block.dispatch.BlockStateModelPart;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -21,7 +23,6 @@ import net.createmod.catnip.api.client.render.SuperByteBuffer;
 import net.createmod.catnip.api.client.render.SuperByteBufferBuilder;
 import net.createmod.catnip.api.client.render.SuperByteBufferCache;
 import net.createmod.catnip.api.client.render.SuperByteBufferCache.Compartment;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.api.client.render.model.BakedModelBufferer;
 import net.createmod.catnip.api.client.render.model.ShadeSeparatedResultConsumer;
 import net.createmod.catnip.api.data.Pair;
@@ -34,7 +35,6 @@ import net.createmod.ponder.api.client.scene.PonderScene;
 import net.createmod.ponder.api.client.scene.Selection;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.dispatch.BlockStateModel;
 import net.minecraft.client.renderer.blockentity.BlockEntityRenderer;
@@ -317,7 +317,7 @@ public class WorldSectionElementImpl extends AnimatedSceneElementBase implements
 	}
 
 	@Override
-	protected void renderFirst(PonderLevel level, MultiBufferSource buffer, SubmitNodeCollector queue, Camera camera,
+	protected void renderFirst(PonderLevel level, SubmitNodeCollector queue, Camera camera,
 	                           CameraRenderState cameraRenderState, PoseStack poseStack, float fade, float pt) {
 		int light = -1;
 		if (fade != 1)
@@ -355,7 +355,9 @@ public class WorldSectionElementImpl extends AnimatedSceneElementBase implements
 			poseStack.translate(pos.getX(), pos.getY(), pos.getZ());
 			BlockState state = level.getBlockState(pos);
 			BlockStateModel model = Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state);
-			queue.submitBreakingBlockModel(poseStack, model, state.getSeed(pos), progress);
+			List<BlockStateModelPart> parts = new ArrayList<>();
+			model.collectParts(level, pos, state, RandomSource.create(state.getSeed(pos)), parts);
+			queue.submitBreakingBlockModel(poseStack, parts, progress);
 			poseStack.popPose();
 		}
 
@@ -363,7 +365,7 @@ public class WorldSectionElementImpl extends AnimatedSceneElementBase implements
 	}
 
 	@Override
-	protected void renderLayer(PonderLevel world, MultiBufferSource buffer, ChunkSectionLayer layer,
+	protected void renderLayer(PonderLevel world, ChunkSectionLayer layer,
 							   SubmitNodeCollector queue, Camera camera, CameraRenderState cameraRenderState,
 							   PoseStack poseStack, float fade, float pt) {
 		SuperByteBufferCache bufferCache = SuperByteBufferCache.getInstance();
@@ -382,13 +384,17 @@ public class WorldSectionElementImpl extends AnimatedSceneElementBase implements
 
 		int light = lightCoordsFromFade(fade);
 		RenderType type = RenderHelper.convertLayerToType(layer);
-		structureBuffer
-			.light(light)
-			.renderInto(poseStack, buffer.getBuffer(type));
+		queue.submitCustomGeometry(poseStack, type, (pose, consumer) -> {
+			PoseStack local = new PoseStack();
+			local.last().set(pose);
+			structureBuffer
+				.light(light)
+				.renderInto(local, consumer);
+		});
 	}
 
 	@Override
-	protected void renderLast(PonderLevel world, MultiBufferSource buffer, SubmitNodeCollector queue, Camera camera,
+	protected void renderLast(PonderLevel world, SubmitNodeCollector queue, Camera camera,
 							  CameraRenderState cameraRenderState, PoseStack poseStack, float fade, float pt) {
 		redraw = false;
 		if (selectedBlock == null)
@@ -410,7 +416,7 @@ public class WorldSectionElementImpl extends AnimatedSceneElementBase implements
 			.lineWidth(1 / 64f)
 			.colored(0xefefef)
 			.disableLineNormals();
-		aabbOutline.render(poseStack, (SuperRenderTypeBuffer) buffer, Vec3.ZERO, pt);
+		aabbOutline.submit(poseStack, queue, Vec3.ZERO, pt);
 
 		poseStack.popPose();
 	}

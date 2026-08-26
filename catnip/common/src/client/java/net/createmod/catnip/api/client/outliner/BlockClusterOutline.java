@@ -1,5 +1,7 @@
 package net.createmod.catnip.api.client.outliner;
 
+
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -13,7 +15,6 @@ import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import net.createmod.catnip.api.client.render.BindableTexture;
 import net.createmod.catnip.api.client.render.PonderRenderTypes;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.api.data.Iterate;
 import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.core.BlockPos;
@@ -38,17 +39,17 @@ public class BlockClusterOutline extends Outline {
 	}
 
 	@Override
-	public void render(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt) {
+	public void submit(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt) {
 		params.loadColor(colorTemp);
 		Vector4f color = colorTemp;
 		int lightmap = params.lightmap;
 		boolean disableLineNormals = params.disableLineNormals;
 
-		renderFaces(ms, buffer, camera, pt, color, lightmap);
-		renderEdges(ms, buffer, camera, pt, color, lightmap, disableLineNormals);
+		submitFaces(ms, queue, camera, pt, color, lightmap);
+		submitEdges(ms, queue, camera, pt, color, lightmap, disableLineNormals);
 	}
 
-	protected void renderFaces(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt, Vector4f color, int lightmap) {
+	protected void submitFaces(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt, Vector4f color, int lightmap) {
 		BindableTexture faceTexture = params.faceTexture;
 		if (faceTexture == null)
 			return;
@@ -59,22 +60,22 @@ public class BlockClusterOutline extends Outline {
 		ms.translate(cluster.anchor.getX() - camera.x, cluster.anchor.getY() - camera.y,
 			cluster.anchor.getZ() - camera.z);
 
-		PoseStack.Pose pose = ms.last();
 		RenderType renderType = PonderRenderTypes.outlineTranslucent(faceTexture.getId(), true);
-		VertexConsumer consumer = buffer.getLateBuffer(renderType);
+		Vector4f faceColor = new Vector4f(color);
 
-		cluster.visibleFaces.forEach((face, axisDirection) -> {
-			Direction direction = Direction.get(axisDirection, face.axis);
-			BlockPos pos = face.pos;
-			if (axisDirection == AxisDirection.POSITIVE)
-				pos = pos.relative(direction.getOpposite());
-			bufferBlockFace(pose, consumer, pos, direction, color, lightmap);
-		});
+		queue.order(ORDER_LATE)
+			.submitCustomGeometry(ms, renderType, (pose, consumer) -> cluster.visibleFaces.forEach((face, axisDirection) -> {
+				Direction direction = Direction.get(axisDirection, face.axis);
+				BlockPos pos = face.pos;
+				if (axisDirection == AxisDirection.POSITIVE)
+					pos = pos.relative(direction.getOpposite());
+				bufferBlockFace(pose, consumer, pos, direction, faceColor, lightmap);
+			}));
 
 		ms.popPose();
 	}
 
-	protected void renderEdges(PoseStack ms, SuperRenderTypeBuffer buffer, Vec3 camera, float pt, Vector4f color, int lightmap, boolean disableNormals) {
+	protected void submitEdges(PoseStack ms, SubmitNodeCollector queue, Vec3 camera, float pt, Vector4f color, int lightmap, boolean disableNormals) {
 		float lineWidth = params.getLineWidth();
 		if (lineWidth == 0)
 			return;
@@ -85,16 +86,15 @@ public class BlockClusterOutline extends Outline {
 		ms.translate(cluster.anchor.getX() - camera.x, cluster.anchor.getY() - camera.y,
 			cluster.anchor.getZ() - camera.z);
 
-		PoseStack.Pose pose = ms.last();
-		VertexConsumer consumer = buffer.getBuffer(PonderRenderTypes.outlineSolid());
+		Vector4f edgeColor = new Vector4f(color);
 
-		cluster.visibleEdges.forEach(edge -> {
+		queue.submitCustomGeometry(ms, PonderRenderTypes.outlineSolid(), (pose, consumer) -> cluster.visibleEdges.forEach(edge -> {
 			BlockPos pos = edge.pos;
 			Vector3f origin = originTemp;
 			origin.set(pos.getX(), pos.getY(), pos.getZ());
 			Direction direction = Direction.get(AxisDirection.POSITIVE, edge.axis);
-			bufferCuboidLine(pose, consumer, origin, direction, 1, lineWidth, color, lightmap, disableNormals);
-		});
+			bufferCuboidLine(pose, consumer, origin, direction, 1, lineWidth, edgeColor, lightmap, disableNormals);
+		}));
 
 		ms.popPose();
 	}

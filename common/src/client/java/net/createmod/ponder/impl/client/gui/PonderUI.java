@@ -616,7 +616,7 @@ public class PonderUI extends AbstractPonderScreen {
 			slide,
 			finishingFlash,
 			partialTicks,
-			Minecraft.getInstance().gameRenderer.getGameRenderState().windowRenderState
+			Minecraft.getInstance().gameRenderer.gameRenderState().windowRenderState
 		));
 
 		RenderSystem.restoreProjectionMatrix();
@@ -1058,7 +1058,7 @@ public class PonderUI extends AbstractPonderScreen {
 	public static float getPartialTicks() {
 		float renderPartialTicks = AnimationTickHolder.getGuiPartialTicks();
 
-		if (Minecraft.getInstance().screen instanceof PonderUI ui) {
+		if (Minecraft.getInstance().gui.screen() instanceof PonderUI ui) {
 			if (ui.identifyMode)
 				return ponderPartialTicksPaused;
 

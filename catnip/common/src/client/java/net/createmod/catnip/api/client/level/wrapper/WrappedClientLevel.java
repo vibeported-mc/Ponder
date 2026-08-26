@@ -36,7 +36,7 @@ public class WrappedClientLevel extends ClientLevel {
 
 		super(
 			connection, mc.level.getLevelData(), level.dimension(), level.dimensionTypeRegistration(),
-			chunkRadius, simDistance, mc.levelRenderer, level.isDebug(), seed, level.getSeaLevel()
+			chunkRadius, simDistance, mc.levelExtractor, level.isDebug(), seed, level.getSeaLevel()
 		);
 
 		this.level = level;

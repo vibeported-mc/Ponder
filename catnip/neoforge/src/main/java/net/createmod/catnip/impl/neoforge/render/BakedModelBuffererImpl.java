@@ -47,18 +47,14 @@ public final class BakedModelBuffererImpl {
 	private BakedModelBuffererImpl() {
 	}
 
-	public static void submitModel(BlockStateModel model, BlockPos pos, BlockState state, @Nullable PoseStack poseStack, ShadeSeparatedBufferSource bufferSource, OrderedSubmitNodeCollector submitNodeCollector) {
+	public static void submitModel(BlockStateModel model, BlockPos pos, BlockState state, @Nullable PoseStack poseStack, OrderedSubmitNodeCollector submitNodeCollector) {
 		ThreadLocalObjects objects = THREAD_LOCAL_OBJECTS.get();
 		if (poseStack == null) {
 			poseStack = objects.identityPoseStack;
 		}
-		UniversalMeshEmitter universalEmitter = objects.universalEmitter;
-
 		long seed = state.getSeed(pos);
 
-		universalEmitter.prepare(bufferSource, model.hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT) ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT);
-
-		RenderType layer = model.hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT) ? Sheets.translucentBlockSheet() : Sheets.cutoutBlockSheet();
+		RenderType layer = model.hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT) ? Sheets.translucentBlockItemSheet() : Sheets.cutoutBlockItemSheet();
 		List<BlockStateModelPart> parts = new ArrayList<>();
 
 		model.collectParts(RandomSource.create(seed), parts);
@@ -70,8 +66,6 @@ public final class BakedModelBuffererImpl {
 			LightCoordsUtil.FULL_BRIGHT, OverlayTexture.NO_OVERLAY, 0
 		);
 		poseStack.popPose();
-
-		universalEmitter.clear();
 	}
 
 	public static void bufferModel(BlockStateModel model, BlockPos pos, BlockAndTintGetter level, BlockState state, @Nullable PoseStack poseStack, ShadeSeparatedBufferSource bufferSource) {
@@ -94,7 +88,7 @@ public final class BakedModelBuffererImpl {
 		VertexConsumer buffer = bufferSource.getBuffer(defaultLayer, false);
 
 		QuadInstance instance = new QuadInstance();
-		boolean useAo = Minecraft.getInstance().gameRenderer.getGameRenderState().optionsRenderState.ambientOcclusion;
+		boolean useAo = Minecraft.getInstance().gameRenderer.gameRenderState().optionsRenderState.ambientOcclusion;
 		int light = LightCoordsUtil.pack(level.getBrightness(LightLayer.BLOCK, pos), level.getBrightness(LightLayer.SKY, pos));
 
 		instance.setOverlayCoords(OverlayTexture.NO_OVERLAY);
@@ -124,8 +118,6 @@ public final class BakedModelBuffererImpl {
 		}
 
 		poseStack.popPose();
-
-		universalEmitter.clear();
 	}
 
 	public static void bufferModel(BlockStateModel model, BlockPos pos, BlockAndTintGetter level, BlockState state, @Nullable PoseStack poseStack, ShadeSeparatedResultConsumer resultConsumer) {
@@ -184,8 +176,8 @@ public final class BakedModelBuffererImpl {
 				model.collectParts(RandomSource.create(seed), parts);
 
 				QuadInstance instance = new QuadInstance();
-				boolean useAo = Minecraft.getInstance().gameRenderer.getGameRenderState().optionsRenderState.ambientOcclusion;
-				int light = LevelRenderer.getLightCoords(level, pos);
+				boolean useAo = Minecraft.getInstance().gameRenderer.gameRenderState().optionsRenderState.ambientOcclusion;
+				int light = LightCoordsUtil.getLightCoords(level, pos);
 
 				instance.setOverlayCoords(OverlayTexture.NO_OVERLAY);
 

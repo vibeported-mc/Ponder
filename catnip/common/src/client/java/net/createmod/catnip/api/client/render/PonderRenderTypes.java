@@ -16,14 +16,12 @@ public abstract class PonderRenderTypes {
 	private static final RenderType GUI = RenderTypeAccessor.catnip$create(
 		createLayerName("gui"),
 		RenderSetup.builder(RenderPipelines.GUI)
-			.bufferSize(RenderType.SMALL_BUFFER_SIZE)
 			.createRenderSetup()
 	);
 
 	private static final RenderType OUTLINE_SOLID = RenderTypeAccessor.catnip$create(
 		createLayerName("outline_solid"),
 		RenderSetup.builder(RenderPipelines.ENTITY_SOLID)
-			.bufferSize(256)
 			.withTexture("Sampler0", CatnipSpecialTextures.BLANK.getId())
 			.useLightmap()
 			.useOverlay()
@@ -34,7 +32,6 @@ public abstract class PonderRenderTypes {
 		RenderTypeAccessor.catnip$create(
 			createLayerName("outline_translucent" + (cull ? "_cull" : "")),
 			RenderSetup.builder(cull ? RenderPipelines.ENTITY_TRANSLUCENT_CULL : RenderPipelines.ENTITY_TRANSLUCENT)
-				.bufferSize(256)
 				.withTexture("Sampler0", texture)
 				.sortOnUpload()
 				.useLightmap()

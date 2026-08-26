@@ -30,7 +30,6 @@ import net.createmod.catnip.api.animation.LerpedFloat;
 import net.createmod.catnip.api.client.animation.AnimationTickHolder;
 import net.createmod.catnip.api.client.gui.UIRenderHelper;
 import net.createmod.catnip.api.client.outliner.Outliner;
-import net.createmod.catnip.api.client.render.SuperRenderTypeBuffer;
 import net.createmod.catnip.api.data.Pair;
 import net.createmod.catnip.api.math.VecHelper;
 import net.createmod.catnip.api.platform.services.ModHooksHelper;
@@ -50,7 +49,7 @@ import net.createmod.ponder.impl.client.registration.PonderLocalization;
 import net.minecraft.client.Camera;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.renderer.SubmitNodeStorage;
+import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.chunk.ChunkSectionLayer;
 import net.minecraft.client.renderer.state.level.CameraRenderState;
 import net.minecraft.core.BlockPos;
@@ -261,7 +260,7 @@ public class PonderScene {
 		activeSchedule.add(new HideAllInstruction(10, null));
 	}
 
-	public void renderScene(SuperRenderTypeBuffer buffer, SubmitNodeStorage queue, PoseStack poseStack, float pt) {
+	public void renderScene(SubmitNodeCollector queue, PoseStack poseStack, float pt) {
 		Minecraft mc = Minecraft.getInstance();
 
 		poseStack.pushPose();
@@ -275,16 +274,16 @@ public class PonderScene {
 		cameraRenderState.orientation.set(camera.rotation());
 
 		mc.setCameraEntity(this.renderViewEntity);
-		forEachVisible(PonderSceneElement.class, e -> e.renderFirst(world, buffer, queue, camera, cameraRenderState, poseStack, pt));
+		forEachVisible(PonderSceneElement.class, e -> e.renderFirst(world, queue, camera, cameraRenderState, poseStack, pt));
 		mc.setCameraEntity(prevRVE);
 
 		for (ChunkSectionLayer layer : ChunkSectionLayer.values())
-			forEachVisible(PonderSceneElement.class, e -> e.renderLayer(world, buffer, layer, queue, camera, cameraRenderState, poseStack, pt));
+			forEachVisible(PonderSceneElement.class, e -> e.renderLayer(world, layer, queue, camera, cameraRenderState, poseStack, pt));
 
-		forEachVisible(PonderSceneElement.class, e -> e.renderLast(world, buffer, queue, camera, cameraRenderState, poseStack, pt));
+		forEachVisible(PonderSceneElement.class, e -> e.renderLast(world, queue, camera, cameraRenderState, poseStack, pt));
 		world.renderEntities(poseStack, queue, camera, cameraRenderState, pt);
 		world.renderParticles(poseStack, queue, camera, cameraRenderState, pt);
-		outliner.renderOutlines(poseStack, buffer, Vec3.ZERO, pt);
+		outliner.submitOutlines(poseStack, queue, Vec3.ZERO, pt);
 
 		poseStack.popPose();
 	}

@@ -7,7 +7,6 @@ import com.mojang.math.Axis;
 import net.createmod.catnip.api.client.platform.ClientFluidHelper;
 import net.createmod.catnip.api.data.Iterate;
 import net.createmod.catnip.api.platform.services.ModFluidHelper;
-import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.OrderedSubmitNodeCollector;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
@@ -45,19 +44,9 @@ public final class FluidRenderHelper {
 		ms.popPose();
 	}
 
-	public static void renderFluidBox(FluidState fluid, float xMin, float yMin, float zMin, float xMax, float yMax, float zMax,
-									  MultiBufferSource buffer, PoseStack ms, int light, boolean renderBottom, boolean invertGasses) {
-		renderFluidBox(fluid, xMin, yMin, zMin, xMax, yMax, zMax, getFluidBuilder(buffer), ms, light, renderBottom, invertGasses);
-	}
-
 	public static void renderFluidBox(FluidState fluid, float xMin, float yMin, float zMin, float xMax,
 									  float yMax, float zMax, VertexConsumer builder, PoseStack ms, int light, boolean renderBottom, boolean invertGasses) {
 		renderFluidBox(ModFluidHelper.INSTANCE.instanceFor(fluid), xMin, yMin, zMin, xMax, yMax, zMax, builder, ms, light, renderBottom, invertGasses);
-	}
-
-	public static void renderFluidBox(TypedInstance<Fluid> fluid, float xMin, float yMin, float zMin, float xMax,
-									  float yMax, float zMax, MultiBufferSource buffer, PoseStack ms, int light, boolean renderBottom, boolean invertGasses) {
-		renderFluidBox(fluid, xMin, yMin, zMin, xMax, yMax, zMax, getFluidBuilder(buffer), ms, light, renderBottom, invertGasses);
 	}
 
 	public static void renderFluidBox(TypedInstance<Fluid> fluid, float xMin, float yMin, float zMin, float xMax, float yMax, float zMax,
@@ -103,10 +92,6 @@ public final class FluidRenderHelper {
 					builder, peek, light, color, fluidTexture);
 			}
 		}
-	}
-
-	public static VertexConsumer getFluidBuilder(MultiBufferSource buffer) {
-		return buffer.getBuffer(RenderTypes.translucentMovingBlock());
 	}
 
 	public static void renderStillTiledFace(Direction dir, float left, float down, float right, float up,

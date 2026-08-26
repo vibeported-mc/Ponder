@@ -59,7 +59,7 @@ public final class BakedModelBuffererImpl {
 		universalEmitter.prepare(bufferSource, model.hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT) ? ChunkSectionLayer.TRANSLUCENT : ChunkSectionLayer.CUTOUT);
 		model = universalEmitter.wrapModel(model);
 
-		RenderType layer = model.hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT) ? Sheets.translucentBlockSheet() : Sheets.cutoutBlockSheet();
+		RenderType layer = model.hasMaterialFlag(BakedQuad.FLAG_TRANSLUCENT) ? Sheets.translucentBlockItemSheet() : Sheets.cutoutBlockItemSheet();
 		List<BlockStateModelPart> parts = new ArrayList<>();
 
 		model.collectParts(RandomSource.create(seed), parts);
@@ -96,7 +96,7 @@ public final class BakedModelBuffererImpl {
 		VertexConsumer buffer = bufferSource.getBuffer(defaultLayer, false);
 
 		QuadInstance instance = new QuadInstance();
-		boolean useAo = Minecraft.getInstance().gameRenderer.getGameRenderState().optionsRenderState.ambientOcclusion;
+		boolean useAo = Minecraft.getInstance().gameRenderer.gameRenderState().optionsRenderState.ambientOcclusion;
 		int light = LightCoordsUtil.pack(level.getBrightness(LightLayer.BLOCK, pos), level.getBrightness(LightLayer.SKY, pos));
 
 		instance.setOverlayCoords(OverlayTexture.NO_OVERLAY);
@@ -187,7 +187,7 @@ public final class BakedModelBuffererImpl {
 				model.collectParts(RandomSource.create(seed), parts);
 
 				QuadInstance instance = new QuadInstance();
-				boolean useAo = Minecraft.getInstance().gameRenderer.getGameRenderState().optionsRenderState.ambientOcclusion;
+				boolean useAo = Minecraft.getInstance().gameRenderer.gameRenderState().optionsRenderState.ambientOcclusion;
 				int light = LevelRenderer.getLightCoords(level, pos);
 
 				instance.setOverlayCoords(OverlayTexture.NO_OVERLAY);
