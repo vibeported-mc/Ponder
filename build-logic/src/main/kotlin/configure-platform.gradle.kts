@@ -104,6 +104,20 @@ loom?.javaClass?.getMethod("splitEnvironmentSourceSets")?.run {
     plugins.apply("register-client-jar")
 }
 
+// ModDevGradle 2.0.144 does not know Minecraft 26.2 yet, so its version capability table falls back
+// to Java 21 for the NeoFormRuntime tasks. There is no Java 21 on every machine, and Gradle 9 cannot
+// auto-provision one (the foojay resolver still references JvmVendorSpec.IBM_SEMERU, which Gradle 9
+// removed). The tooling runs fine on the toolchain we already build with.
+// NeoFormRuntimeTask lives on the platform project's plugin classpath rather than this one's, so it
+// is matched by name and its property set reflectively.
+val nfrtJavaExecutable = javaToolchains.launcherFor(java.toolchain)
+    .map { it.executablePath.asFile.absolutePath }
+tasks.matching { it.javaClass.name.startsWith("net.neoforged.nfrtgradle.") }.configureEach {
+    @Suppress("UNCHECKED_CAST")
+    val javaExecutable = javaClass.getMethod("getJavaExecutable").invoke(this) as Property<String>
+    javaExecutable.set(nfrtJavaExecutable)
+}
+
 // generate package-infos for the main (and client, if present) sourceSet(s)
 extensions.getByType<PackageInfosExtension>().sources(sourceSets.named { it == "main" || it == "client" })
 

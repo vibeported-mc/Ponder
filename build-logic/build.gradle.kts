@@ -6,6 +6,8 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven("https://maven.neoforged.net/releases")
+    gradlePluginPortal()
 }
 
 gradlePlugin {

@@ -1,0 +1,23 @@
+modLoader = "javafml"
+loaderVersion = "[0,)"
+license = "MIT"
+
+[[mods]]
+modId = "ponder_testmod"
+version = "${version}"
+displayName = "Ponder Testmod"
+description = "Test mod for Ponder"
+authors = "${authors}"
+
+[[dependencies.ponder_testmod]]
+modId = "ponder"
+type = "required"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "CLIENT"
+
+[[dependencies.ponder_testmod]]
+modId = "neoforge"
+type = "required"
+versionRange = "[${neo_version},)"
+side = "BOTH"

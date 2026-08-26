@@ -4,7 +4,7 @@ import com.llamalad7.mixinextras.injector.wrapoperation.Operation;
 import com.llamalad7.mixinextras.injector.wrapoperation.WrapOperation;
 
 import net.createmod.catnip.api.client.gui.TickableGuiEventListener;
-import net.minecraft.client.Minecraft;
+import net.minecraft.client.gui.Gui;
 
 import net.minecraft.client.gui.components.events.GuiEventListener;
 import net.minecraft.client.gui.screens.Screen;
@@ -12,7 +12,10 @@ import net.minecraft.client.gui.screens.Screen;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 
-@Mixin(Minecraft.class)
+/**
+ * Minecraft 26.2 moved the screen, and ticking it, from Minecraft onto the Gui.
+ */
+@Mixin(Gui.class)
 public class MinecraftMixin {
 	@WrapOperation(
 		method = "tick",
