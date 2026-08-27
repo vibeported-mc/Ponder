@@ -14,10 +14,10 @@ public record GuiElementTransform(
 	float xLocal, float yLocal, float zLocal,
 	float viewXRot, float viewYRot, float viewZRot,
 	float xRot, float yRot, float zRot,
-	float xRotOffset, float yRotOffset
+	float xRotOffset, float yRotOffset, float zRotOffset
 ) {
 
-	public static final GuiElementTransform NONE = new GuiElementTransform(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
+	public static final GuiElementTransform NONE = new GuiElementTransform(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
 	/**
 	 * The view rotation goes on first, the way it used to be pushed onto the stack around a group of
@@ -30,11 +30,11 @@ public record GuiElementTransform(
 
 		poseStack.translate(xLocal, yLocal, zLocal);
 
-		poseStack.translate(xRotOffset, yRotOffset, 0);
+		poseStack.translate(xRotOffset, yRotOffset, zRotOffset);
 		poseStack.mulPose(Axis.ZP.rotationDegrees(zRot));
 		poseStack.mulPose(Axis.XP.rotationDegrees(xRot));
 		poseStack.mulPose(Axis.YP.rotationDegrees(yRot));
-		poseStack.translate(-xRotOffset, -yRotOffset, 0);
+		poseStack.translate(-xRotOffset, -yRotOffset, -zRotOffset);
 	}
 
 }

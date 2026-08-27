@@ -59,6 +59,7 @@ public class GuiGameElement {
         protected double scale = 1;
         protected int color = 0xFFFFFF;
         protected Vector2f rotationOffset = new Vector2f();
+        protected float rotationOffsetZ;
 
         @Nullable
         protected ILightingSettings customLighting = null;
@@ -108,6 +109,15 @@ public class GuiGameElement {
             return this;
         }
 
+        /**
+         * A pivot with depth, for elements whose own rotation is about a point away from the plane.
+         */
+        public GuiRenderBuilder withRotationOffset(float x, float y, float z) {
+            this.rotationOffset = new Vector2f(x, y);
+            this.rotationOffsetZ = z;
+            return this;
+        }
+
         public GuiRenderBuilder lighting(ILightingSettings lighting) {
             customLighting = lighting;
             return this;
@@ -136,7 +146,7 @@ public class GuiGameElement {
             return new GuiElementTransform(xLocal, yLocal, zLocal,
                 (float) viewXRot, (float) viewYRot, (float) viewZRot,
                 (float) xRot, (float) yRot, (float) zRot,
-                rotationOffset.x, rotationOffset.y);
+                rotationOffset.x, rotationOffset.y, rotationOffsetZ);
         }
 
         protected void cleanUpMatrix(Matrix3x2fStack poseStack) {
