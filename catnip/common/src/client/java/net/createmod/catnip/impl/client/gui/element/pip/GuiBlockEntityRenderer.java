@@ -16,6 +16,8 @@ public class GuiBlockEntityRenderer extends PictureInPictureRenderer<GuiBlockEnt
 
 	@Override
 	protected void renderToTexture(GuiBlockEntityRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
+		renderState.transform().apply(poseStack);
+
 		CameraRenderState cameraRenderState = new CameraRenderState();
 
 		Minecraft.getInstance().getBlockEntityRenderDispatcher()

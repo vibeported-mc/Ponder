@@ -23,6 +23,8 @@ public class GuiBlockModelRenderer extends PictureInPictureRenderer<GuiBlockMode
 
 	@Override
 	protected void renderToTexture(GuiBlockModelRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
+		renderState.transform().apply(poseStack);
+
 		SinglePosVirtualBlockGetter level = SinglePosVirtualBlockGetter.createFullBright();
 		level.blockState(renderState.state());
 		level.blockEntity(renderState.blockEntity());

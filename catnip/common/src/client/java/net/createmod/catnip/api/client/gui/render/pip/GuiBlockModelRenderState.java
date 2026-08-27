@@ -11,7 +11,8 @@ import net.minecraft.world.level.block.state.BlockState;
 public record GuiBlockModelRenderState(
 	BlockState state,
 	@Nullable BlockEntity blockEntity,
-	Matrix3x2f pose, // FIXME: actually do something with this information
+	Matrix3x2f pose,
+	GuiElementTransform transform,
 	int color,
 	int x0, int y0,
 	int x1, int y1,

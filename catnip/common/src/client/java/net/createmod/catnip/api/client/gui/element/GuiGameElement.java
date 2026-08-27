@@ -11,6 +11,7 @@ import net.createmod.catnip.api.client.gui.ILightingSettings;
 import net.createmod.catnip.api.client.gui.UIRenderHelper;
 import net.createmod.catnip.api.client.gui.render.pip.GuiBlockEntityRenderState;
 import net.createmod.catnip.api.client.gui.render.pip.GuiBlockModelRenderState;
+import net.createmod.catnip.api.client.gui.render.pip.GuiElementTransform;
 import net.createmod.catnip.api.client.gui.render.pip.GuiFluidStateRenderState;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
@@ -54,6 +55,7 @@ public class GuiGameElement {
     public abstract static class GuiRenderBuilder extends AbstractRenderElement {
         protected float xLocal, yLocal, zLocal;
         protected double xRot, yRot, zRot;
+        protected double viewXRot, viewYRot, viewZRot;
         protected double scale = 1;
         protected int color = 0xFFFFFF;
         protected Vector2f rotationOffset = new Vector2f();
@@ -65,6 +67,17 @@ public class GuiGameElement {
             this.xLocal = x;
             this.yLocal = y;
             this.zLocal = z;
+            return this;
+        }
+
+        /**
+         * The orientation the whole scene is viewed from, applied before this element's own
+         * rotation. Elements drawn together in one view share it.
+         */
+        public GuiRenderBuilder viewRotate(double xRot, double yRot, double zRot) {
+            this.viewXRot = xRot;
+            this.viewYRot = yRot;
+            this.viewZRot = zRot;
             return this;
         }
 
@@ -109,17 +122,21 @@ public class GuiGameElement {
             prepareLighting();
         }
 
+        /**
+         * Only the element's place on the screen. Its position and orientation within the scene are
+         * three-dimensional, which this stack no longer is, so they travel with the render state and
+         * are applied while the element is drawn into its own texture.
+         */
         protected void transformMatrix(Matrix3x2fStack poseStack) {
 			poseStack.translate(x, y);
 			poseStack.scale((float) scale, (float) scale);
-			poseStack.translate(xLocal, yLocal);
-			UIRenderHelper.flipForGuiRender(poseStack);
-			poseStack.translate(rotationOffset.x, rotationOffset.y);
-			// TODO: how
-//            poseStack.mulPose(Axis.ZP.rotationDegrees((float) zRot));
-//            poseStack.mulPose(Axis.XP.rotationDegrees((float) xRot));
-//            poseStack.mulPose(Axis.YP.rotationDegrees((float) yRot));
-            poseStack.translate(-rotationOffset.x, -rotationOffset.y);
+        }
+
+        protected GuiElementTransform elementTransform() {
+            return new GuiElementTransform(xLocal, yLocal, zLocal,
+                (float) viewXRot, (float) viewYRot, (float) viewZRot,
+                (float) xRot, (float) yRot, (float) zRot,
+                rotationOffset.x, rotationOffset.y);
         }
 
         protected void cleanUpMatrix(Matrix3x2fStack poseStack) {
@@ -170,6 +187,7 @@ public class GuiGameElement {
 			graphics.guiRenderState.addPicturesInPictureState(
 				new GuiBlockModelRenderState(blockState, blockEntity,
 					new Matrix3x2f(graphics.pose()),
+					elementTransform(),
 					ARGB.color(255, color),
 					0, 0, 16, 16, 1,
 					null, null
@@ -198,7 +216,7 @@ public class GuiGameElement {
 			BlockState stateBefore = blockEntity.getBlockState();
 			blockEntity.setBlockState(this.blockState);
 			net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState blockEntityRenderState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(blockEntity, Minecraft.getInstance().getDeltaTracker().getRealtimeDeltaTicks(), null, false);
-			graphics.guiRenderState.addPicturesInPictureState(new GuiBlockEntityRenderState(blockEntityRenderState, new Matrix3x2f(graphics.pose()), 0, 0, 16, 16, 1, null, null));
+			graphics.guiRenderState.addPicturesInPictureState(new GuiBlockEntityRenderState(blockEntityRenderState, new Matrix3x2f(graphics.pose()), elementTransform(), 0, 0, 16, 16, 1, null, null));
 			blockEntity.setBlockState(stateBefore);
         }
     }
@@ -222,7 +240,7 @@ public class GuiGameElement {
             if (blockState.getFluidState().isEmpty()) return;
 
 			graphics.guiRenderState.addPicturesInPictureState(new GuiFluidStateRenderState(blockState.getFluidState(), new Matrix3x2f(graphics.pose()),
-				0, 0, 16, 16, 1, null, null));
+				elementTransform(), 0, 0, 16, 16, 1, null, null));
         }
     }
 

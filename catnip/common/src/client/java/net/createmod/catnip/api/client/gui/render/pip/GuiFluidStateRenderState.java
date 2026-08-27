@@ -9,7 +9,8 @@ import net.minecraft.world.level.material.FluidState;
 
 public record GuiFluidStateRenderState(
 	FluidState fluidState,
-	Matrix3x2f pose, // FIXME: actually do something with this information
+	Matrix3x2f pose,
+	GuiElementTransform transform,
 	int x0, int y0,
 	int x1, int y1,
 	float scale, @Nullable ScreenRectangle scissorArea, @Nullable ScreenRectangle bounds

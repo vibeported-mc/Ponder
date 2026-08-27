@@ -15,6 +15,7 @@ public class GuiFluidStateRenderer extends PictureInPictureRenderer<GuiFluidStat
 
 	@Override
 	protected void renderToTexture(GuiFluidStateRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
+		renderState.transform().apply(poseStack);
 		ModClientHooksHelper.INSTANCE.submitFullFluidState(poseStack, submitNodeCollector, renderState.fluidState());
 	}
 
