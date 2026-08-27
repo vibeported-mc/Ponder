@@ -6,6 +6,7 @@ import net.createmod.catnip.api.client.gui.NavigatableSimiScreen;
 import net.createmod.catnip.api.client.gui.ScreenOpener;
 import net.createmod.ponder.api.Ponder;
 import net.createmod.ponder.impl.client.gui.element.PonderButton;
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 
 public abstract class AbstractPonderScreen extends NavigatableSimiScreen {
@@ -46,6 +47,14 @@ public abstract class AbstractPonderScreen extends NavigatableSimiScreen {
 			);
 		}
 
+	}
+
+	/**
+	 * Ponder's screens draw from {@link #extractScaledRenderState}, inside the navigation transform,
+	 * rather than from the window hook.
+	 */
+	@Override
+	protected void renderWindow(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 	}
 
 	@Override

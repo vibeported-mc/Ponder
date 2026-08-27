@@ -1,5 +1,6 @@
 package net.createmod.ponder.testmod.client;
 
+import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.createmod.catnip.api.client.gui.NavigatableSimiScreen;
 import net.createmod.catnip.api.client.gui.ScreenOpener;
 import net.createmod.catnip.api.client.gui.element.GuiGameElement;
@@ -49,4 +50,9 @@ public final class DemoScreen extends NavigatableSimiScreen {
 		screen.centerScalingOn(centerX, centerY);
 		ScreenOpener.transitionTo(screen);
 	}
+
+	@Override
+	protected void renderWindow(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+	}
+
 }
