@@ -146,7 +146,20 @@ public class GuiGameElement {
          */
         protected void transformMatrix(Matrix3x2fStack poseStack) {
 			poseStack.translate(x, y);
-			poseStack.scale((float) scale, (float) scale);
+			float factor = (float) scale * scaleUnit();
+			poseStack.scale(factor, factor);
+        }
+
+        /**
+         * How many screen pixels one unit of this element's own space is worth.
+         * <p>
+         * An item is drawn sixteen pixels wide, so its scale has always been a multiple of that. A
+         * block model used to be drawn at one pixel per block; 26.2 draws it into a
+         * sixteen-by-sixteen picture-in-picture quad instead, which the scale has to undo for the
+         * numbers call sites pass to keep meaning what they did.
+         */
+        protected float scaleUnit() {
+            return 1;
         }
 
         protected GuiElementTransform elementTransform() {
@@ -175,6 +188,12 @@ public class GuiGameElement {
 
     protected static class GuiBlockModelRenderBuilder extends GuiRenderBuilder {
         protected BlockStateModel blockStateModel;
+
+        @Override
+        protected float scaleUnit() {
+            return 1 / 16f;
+        }
+
         protected BlockState blockState;
 
         @Nullable
