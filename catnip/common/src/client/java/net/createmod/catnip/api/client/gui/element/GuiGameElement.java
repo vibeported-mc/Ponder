@@ -63,10 +63,10 @@ public class GuiGameElement {
         @Nullable
         protected ILightingSettings customLighting = null;
 
-        public GuiRenderBuilder atLocal(float x, float y, float z) {
-            this.xLocal = x;
-            this.yLocal = y;
-            this.zLocal = z;
+        public GuiRenderBuilder atLocal(double x, double y, double z) {
+            this.xLocal = (float) x;
+            this.yLocal = (float) y;
+            this.zLocal = (float) z;
             return this;
         }
 
