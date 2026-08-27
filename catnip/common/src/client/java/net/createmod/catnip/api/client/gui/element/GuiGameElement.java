@@ -52,6 +52,13 @@ public class GuiGameElement {
                 fluid.defaultFluidState().createLegacyBlock().setValue(LiquidBlock.LEVEL, 0));
     }
 
+    /**
+     * A model with no block state behind it - one piece of a larger model, most often.
+     */
+    public static GuiRenderBuilder of(BlockStateModel model) {
+        return new GuiBlockModelRenderBuilder(model, null, null);
+    }
+
     public abstract static class GuiRenderBuilder extends AbstractRenderElement {
         protected float xLocal, yLocal, zLocal;
         protected double xRot, yRot, zRot;
