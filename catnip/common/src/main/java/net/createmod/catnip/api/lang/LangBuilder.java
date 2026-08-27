@@ -172,6 +172,24 @@ public class LangBuilder {
 		tooltip.accept(component());
 	}
 
+	/**
+	 * Add this line to a goggle overlay tooltip, indented to sit under its heading.
+	 */
+	public void forGoggles(List<? super MutableComponent> tooltip) {
+		forGoggles(tooltip, 0);
+	}
+
+	/**
+	 * Note that the indent is a fixed number of spaces. Create used to scale it by the font's space
+	 * width so that non-default resource packs lined up, but this class is in the server-safe module
+	 * and cannot reach the font.
+	 */
+	public void forGoggles(List<? super MutableComponent> tooltip, int indents) {
+		tooltip.add(new LangBuilder(namespace).text(" ".repeat(4 + indents))
+			.add(this)
+			.component());
+	}
+
 	//
 
 	private void assertComponent() {

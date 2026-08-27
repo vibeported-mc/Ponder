@@ -8,6 +8,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 
 import net.createmod.catnip.api.theme.Color;
+import net.minecraft.client.renderer.OrderedSubmitNodeCollector;
+import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.util.LightCoordsUtil;
 
 public interface SuperByteBuffer {
@@ -20,6 +22,21 @@ public interface SuperByteBuffer {
 	}
 
 	void renderInto(PoseStack ms, VertexConsumer consumer);
+
+	/**
+	 * Copy everything configured on this buffer into an immutable state and reset the buffer.
+	 * <p>
+	 * This is the entry point for the 26.2 extract/submit split: call it during extraction, keep the
+	 * returned state on your render state, and submit it later. See {@link SuperByteBufferRenderState}.
+	 */
+	SuperByteBufferRenderState extractRenderState();
+
+	/**
+	 * Shorthand for extracting a state and immediately queueing it.
+	 */
+	default void submit(PoseStack ms, RenderType renderType, OrderedSubmitNodeCollector queue) {
+		extractRenderState().submit(ms, renderType, queue);
+	}
 
 	boolean isEmpty();
 

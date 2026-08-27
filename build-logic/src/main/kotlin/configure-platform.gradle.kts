@@ -124,8 +124,19 @@ extensions.getByType<PackageInfosExtension>().sources(sourceSets.named { it == "
 if (name != "common") {
     // The sibling common project, not the root one: catnip has its own.
     val siblingCommon = parent!!.path + ":common"
+    // A platform project pulls the sibling common project's source and class output straight in as
+    // extra source/class directories rather than as a project dependency, so Gradle cannot infer the
+    // ordering. Every task that reads those directories has to say so explicitly. The package-info
+    // generator registers one task per source set, hence the pattern rather than a single name.
+    val commonOutputs = project(siblingCommon).tasks.matching {
+        it.name.matches(Regex("generate[A-Za-z]*PackageInfos"))
+            || it.name in setOf("compileJava", "compileClientJava", "processResources", "processClientResources")
+    }
     tasks.withType<Jar> {
-        dependsOn(project(siblingCommon).tasks.named("generatePackageInfos"))
+        dependsOn(commonOutputs)
+    }
+    tasks.withType<JavaCompile> {
+        dependsOn(commonOutputs)
     }
 }
 

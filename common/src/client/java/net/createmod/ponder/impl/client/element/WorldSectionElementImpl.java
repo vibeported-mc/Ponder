@@ -356,7 +356,9 @@ public class WorldSectionElementImpl extends AnimatedSceneElementBase implements
 			BlockState state = level.getBlockState(pos);
 			BlockStateModel model = Minecraft.getInstance().getModelManager().getBlockStateModelSet().get(state);
 			List<BlockStateModelPart> parts = new ArrayList<>();
-			model.collectParts(level, pos, state, RandomSource.create(state.getSeed(pos)), parts);
+			// The level-aware overload is a NeoForge extension and this module is loader-agnostic, so
+			// only the vanilla form is available here.
+			model.collectParts(RandomSource.create(state.getSeed(pos)), parts);
 			queue.submitBreakingBlockModel(poseStack, parts, progress);
 			poseStack.popPose();
 		}
