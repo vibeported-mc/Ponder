@@ -8,6 +8,10 @@ dependencies {
     compileOnly(libs.bundles.mixin)
     compileOnlyApi(project(":common"))
     clientCompileOnly(project(":common", configuration = "clientJar"))
+    // Ponder's api leaks Catnip types, and compileOnlyApi does not carry into the client source
+    // set, so the testmod has to name Catnip's client output itself.
+    compileOnlyApi(project(":catnip:common"))
+    clientCompileOnly(project(":catnip:common", configuration = "clientJar"))
 }
 
 loom {
