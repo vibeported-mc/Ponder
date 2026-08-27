@@ -1,11 +1,34 @@
 package net.createmod.catnip.api.client.animation;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import net.createmod.catnip.api.client.level.wrapper.WrappedClientLevel;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.EnchantmentScreen;
+import net.minecraft.world.level.LevelAccessor;
 
 public class AnimationTickHolder {
 	private static int ticks;
 	private static int pausedTicks;
+
+	private static final List<AlternateClock> ALTERNATE_CLOCKS = new ArrayList<>();
+
+	/**
+	 * A clock some levels run on instead of the game's. A ponder scene is the case this exists for:
+	 * its animations advance with the scene, not with the world the player left behind.
+	 */
+	public interface AlternateClock {
+		boolean appliesTo(LevelAccessor level);
+
+		int ticks();
+
+		float partialTicks();
+	}
+
+	public static void registerAlternateClock(AlternateClock clock) {
+		ALTERNATE_CLOCKS.add(clock);
+	}
 
 	public static void reset() {
 		ticks = 0;
@@ -29,8 +52,30 @@ public class AnimationTickHolder {
 		return includePaused ? ticks + pausedTicks : ticks;
 	}
 
+	public static int getTicks(LevelAccessor level) {
+		if (level instanceof WrappedClientLevel wrapped)
+			return getTicks(wrapped.getWrappedLevel());
+		for (AlternateClock clock : ALTERNATE_CLOCKS)
+			if (clock.appliesTo(level))
+				return clock.ticks();
+		return getTicks();
+	}
+
+	public static float getPartialTicks(LevelAccessor level) {
+		if (level instanceof WrappedClientLevel wrapped)
+			return getPartialTicks(wrapped.getWrappedLevel());
+		for (AlternateClock clock : ALTERNATE_CLOCKS)
+			if (clock.appliesTo(level))
+				return clock.partialTicks();
+		return getPartialTicks();
+	}
+
 	public static float getRenderTime() {
 		return getTicks() + getPartialTicks();
+	}
+
+	public static float getRenderTime(LevelAccessor level) {
+		return getTicks(level) + getPartialTicks(level);
 	}
 
 	/**
