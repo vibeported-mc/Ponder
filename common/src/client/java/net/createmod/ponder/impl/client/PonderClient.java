@@ -56,4 +56,12 @@ public class PonderClient {
 	public static void modLoadCompleted() {
 		PonderIndex.registerAll();
 	}
+
+	/**
+	 * Throws away the cached geometry of every ponder scene, so the next frame rebuilds it.
+	 */
+	public static void invalidateRenderers() {
+		SuperByteBufferCache.getInstance()
+			.invalidate(WorldSectionElementImpl.PONDER_WORLD_SECTION);
+	}
 }
