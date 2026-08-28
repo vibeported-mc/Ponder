@@ -586,6 +586,11 @@ public class PonderUI extends AbstractPonderScreen {
 	public void extractScaledRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		super.extractScaledRenderState(graphics, mouseX, mouseY, partialTicks);
 
+		// The scene runs on ponder's own clock, which stretches a tick over several game ticks while a
+		// text window is up. The fraction handed to a screen only ever spans one game tick, so asking
+		// for ponder's own leaves the animation stepping whenever a caption is on screen.
+		partialTicks = getPartialTicks();
+
 		float widgetTicks = this.identifyMode ? ponderPartialTicksPaused : partialTicks;
 		float sceneTicks = this.skipCooling > 0 ? 0 : widgetTicks;
 

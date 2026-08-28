@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import net.createmod.catnip.api.client.level.wrapper.WrappedClientLevel;
+import net.createmod.catnip.impl.client.mixin.TimerAccessor;
+import net.minecraft.client.DeltaTracker;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.inventory.EnchantmentScreen;
 import net.minecraft.world.level.LevelAccessor;
@@ -95,7 +97,15 @@ public class AnimationTickHolder {
 	///
 	/// This method provides access to the accumulated delta. This is actually what vanilla
 	/// does in [EnchantmentScreen], which needs a smooth animation for the book opening.
+	///
+	/// The accumulated delta is read straight off the timer rather than through
+	/// [DeltaTracker#getGameTimeDeltaPartialTick], because that accessor hands back a value frozen at
+	/// the moment of pause once the game is paused. Screens that animate are usually pause screens, so
+	/// going through it would leave them stepping once per client tick instead of once per frame.
 	public static float getGuiPartialTicks() {
+		if (Minecraft.getInstance().getDeltaTracker() instanceof TimerAccessor timer)
+			return timer.catnip$getDeltaTickResidual();
+
 		return getPartialTicks();
 	}
 }

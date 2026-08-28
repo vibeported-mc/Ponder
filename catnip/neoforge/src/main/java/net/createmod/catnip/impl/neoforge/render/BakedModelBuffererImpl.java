@@ -81,6 +81,10 @@ public final class BakedModelBuffererImpl {
 		universalEmitter.prepare(bufferSource, defaultLayer);
 
 		List<BlockStateModelPart> parts = new ArrayList<>();
+		// Deliberately the bare overload. This buffers a model on its own, typically at the origin of
+		// an empty level, so there are no surroundings to consult - a model that varies with them has
+		// to fall back to its unconditional geometry here, which is exactly what callers want when
+		// they ask for a block's model detached from any block.
 		model.collectParts(RandomSource.create(seed), parts);
 
 		poseStack.pushPose();
@@ -173,7 +177,9 @@ public final class BakedModelBuffererImpl {
 				poseStack.translate(pos.getX() * 0.5, pos.getY() * 0.5, pos.getZ() * 0.5);
 
 				List<BlockStateModelPart> parts = new ArrayList<>();
-				model.collectParts(RandomSource.create(seed), parts);
+				// See the note in bufferModel: the level-aware overload is what lets a model decide
+				// its geometry from its surroundings.
+				model.collectParts(level, pos, state, RandomSource.create(seed), parts);
 
 				QuadInstance instance = new QuadInstance();
 				boolean useAo = Minecraft.getInstance().gameRenderer.gameRenderState().optionsRenderState.ambientOcclusion;
