@@ -22,6 +22,7 @@ import org.joml.Matrix4f;
 import org.joml.Vector4f;
 import org.jspecify.annotations.Nullable;
 
+import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.vertex.PoseStack;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
@@ -640,6 +641,21 @@ public class PonderScene {
 				return;
 			cachedMat = apply(new PoseStack(), pt).last()
 				.pose();
+		}
+
+		/**
+		 * Where the cursor points, in the space {@link #screenToScene} works in.
+		 * <p>
+		 * The scene is drawn into a picture-in-picture texture whose pixels are gui-scaled, so this
+		 * transform measures the screen in those pixels rather than in gui coordinates. Handing it a
+		 * gui-scaled mouse position instead builds a ray that misses the scene entirely.
+		 */
+		public Vec3 cursorToScene(int depth, float pt) {
+			Minecraft mc = Minecraft.getInstance();
+			Window window = mc.getWindow();
+			double x = mc.mouseHandler.xpos() * window.getGuiScaledWidth() / window.getScreenWidth() * guiScale;
+			double y = mc.mouseHandler.ypos() * window.getGuiScaledHeight() / window.getScreenHeight() * guiScale;
+			return screenToScene(x, y, depth, pt);
 		}
 
 		public int guiScale() {

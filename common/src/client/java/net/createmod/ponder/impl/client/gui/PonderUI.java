@@ -520,12 +520,9 @@ public class PonderUI extends AbstractPonderScreen {
 		if (!identifyMode)
 			return;
 
-		Window w = minecraft.getWindow();
-		double mouseX = minecraft.mouseHandler.xpos() * w.getGuiScaledWidth() / w.getScreenWidth();
-		double mouseY = minecraft.mouseHandler.ypos() * w.getGuiScaledHeight() / w.getScreenHeight();
 		SceneTransform t = activeScene.getTransform();
-		Vec3 vec1 = t.screenToScene(mouseX, mouseY, 1000, 0);
-		Vec3 vec2 = t.screenToScene(mouseX, mouseY, -100, 0);
+		Vec3 vec1 = t.cursorToScene(1000, 0);
+		Vec3 vec2 = t.cursorToScene(-100, 0);
 		Pair<ItemStack, BlockPos> pair = activeScene.rayTraceScene(vec1, vec2);
 		hoveredTooltipItem = pair.getFirst();
 		hoveredBlockPos = pair.getSecond();
@@ -644,9 +641,9 @@ public class PonderUI extends AbstractPonderScreen {
 		Matrix3x2fStack ms = graphics.pose();
 
 		if (identifyMode) {
+			// A tooltip is deferred to the end of the frame, long after this pose is popped, so it has
+			// to be given the cursor position outright rather than be translated into place.
 			if (noWidgetsHovered && mouseY < height - 80) {
-				ms.pushMatrix();
-				ms.translate(mouseX, mouseY);
 				if (hoveredTooltipItem.isEmpty()) {
 
 					MutableComponent text = Ponder.lang()
@@ -663,19 +660,17 @@ public class PonderUI extends AbstractPonderScreen {
 							.stream()
 							.map(t -> (Component) Component.literal(t.getString()))
 							.toList(),
-						0,
-						0
+						mouseX,
+						mouseY
 					);
 				} else
-					graphics.setTooltipForNextFrame(font, hoveredTooltipItem, 0, 0);
+					graphics.setTooltipForNextFrame(font, hoveredTooltipItem, mouseX, mouseY);
 				if (hoveredBlockPos != null && PonderIndex.editingModeActive() && !userViewMode) {
-					ms.translate(0, -15);
 					boolean copied = hoveredBlockPos.equals(copiedBlockPos);
 					MutableComponent coords = Component.literal(hoveredBlockPos.getX() + ", " + hoveredBlockPos.getY() + ", " + hoveredBlockPos.getZ())
 						.withStyle(copied ? ChatFormatting.GREEN : ChatFormatting.GOLD);
-					graphics.setTooltipForNextFrame(font, coords, 0, 0);
+					graphics.setTooltipForNextFrame(font, coords, mouseX, mouseY - 15);
 				}
-				ms.popMatrix();
 			}
 			scan.flash();
 		} else {

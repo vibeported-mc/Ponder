@@ -1,7 +1,6 @@
 package net.createmod.ponder.api.client.element;
 
 import net.minecraft.world.entity.EntityTypes;
-import com.mojang.blaze3d.platform.Window;
 
 import net.createmod.catnip.api.math.AngleHelper;
 import net.createmod.ponder.api.Ponder;
@@ -9,7 +8,6 @@ import net.createmod.ponder.api.client.level.PonderLevel;
 import net.createmod.ponder.api.client.scene.PonderScene;
 import net.createmod.ponder.impl.client.gui.PonderUI;
 import net.createmod.ponder.impl.mixin.ParrotAccessor;
-import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.EntityType;
@@ -102,12 +100,8 @@ public abstract class ParrotPose {
 
 		@Override
 		protected Vec3 getFacedVec(PonderScene scene) {
-			Minecraft minecraft = Minecraft.getInstance();
-			Window w = minecraft.getWindow();
-			double mouseX = minecraft.mouseHandler.xpos() * w.getGuiScaledWidth() / w.getScreenWidth();
-			double mouseY = minecraft.mouseHandler.ypos() * w.getGuiScaledHeight() / w.getScreenHeight();
 			return scene.getTransform()
-				.screenToScene(mouseX, mouseY, 300, 0);
+				.cursorToScene(300, 0);
 		}
 
 	}
