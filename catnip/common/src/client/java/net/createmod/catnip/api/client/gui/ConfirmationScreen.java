@@ -186,7 +186,7 @@ public class ConfirmationScreen extends AbstractSimiScreen {
 			lineY += offset;
 			if (line == null)
 				continue;
-			graphics.text(font, line.getString(), x, lineY, 0xeaeaea, false);
+			graphics.text(font, line.getString(), x, lineY, 0xFFeaeaea, false);
 		}
 	}
 
