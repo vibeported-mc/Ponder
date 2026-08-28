@@ -11,6 +11,7 @@ import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.renderer.RenderPipelines;
 import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.ItemLike;
 
 public class PonderTag implements ScreenElement {
 	/**
@@ -24,12 +25,20 @@ public class PonderTag implements ScreenElement {
 	private final Identifier id;
 	@Nullable
 	private final Identifier textureIconLocation;
-	private final ItemStack itemIcon;
-	private final ItemStack mainItem;
+	// 26.2 binds an item's default components long after tags are registered, so a tag remembers the
+	// item it was given and only builds a stack from it when something asks to draw one.
+	@Nullable
+	private final ItemLike itemIcon;
+	@Nullable
+	private final ItemLike mainItem;
+	@Nullable
+	private ItemStack itemIconStack;
+	@Nullable
+	private ItemStack mainItemStack;
 
 
-	public PonderTag(Identifier id, @Nullable Identifier textureIconLocation, ItemStack itemIcon,
-					 ItemStack mainItem) {
+	public PonderTag(Identifier id, @Nullable Identifier textureIconLocation, @Nullable ItemLike itemIcon,
+					 @Nullable ItemLike mainItem) {
 		this.id = id;
 		this.textureIconLocation = textureIconLocation;
 		this.itemIcon = itemIcon;
@@ -41,7 +50,15 @@ public class PonderTag implements ScreenElement {
 	}
 
 	public ItemStack getMainItem() {
-		return mainItem;
+		if (mainItemStack == null)
+			mainItemStack = mainItem == null ? ItemStack.EMPTY : new ItemStack(mainItem);
+		return mainItemStack;
+	}
+
+	public ItemStack getItemIcon() {
+		if (itemIconStack == null)
+			itemIconStack = itemIcon == null ? ItemStack.EMPTY : new ItemStack(itemIcon);
+		return itemIconStack;
 	}
 
 	public String getTitle() {
@@ -59,8 +76,8 @@ public class PonderTag implements ScreenElement {
 		if (textureIconLocation != null) {
 			poseStack.scale(0.25f, 0.25f);
 			graphics.blit(RenderPipelines.GUI_TEXTURED, textureIconLocation, 0, 0, 0, 0, 0, 64, 64, 64, 64);
-		} else if (!itemIcon.isEmpty()) {
-			GuiGameElement.of(itemIcon)
+		} else if (!getItemIcon().isEmpty()) {
+			GuiGameElement.of(getItemIcon())
 				.scale(1.25f)
 				.at(-2, -2)
 				.submit(graphics);
