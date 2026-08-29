@@ -34,6 +34,11 @@ import net.minecraft.world.phys.Vec3;
 public final class CatnipClient {
 	public static void preInit() {
 		CatnipRenderPipelines.init();
+
+		// Has to happen here rather than in init: the game asks for its hud layers before the work
+		// enqueued from client setup gets a turn, so anything registered there arrives too late to
+		// be drawn.
+		HudElements.INSTANCE.register(Catnip.id("placement_helper"), PlacementClient::renderCrosshairOverlay);
 	}
 
 	public static void init() {
@@ -50,7 +55,6 @@ public final class CatnipClient {
 		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiFluidStateRenderState.class, GuiFluidStateRenderer::new);
 
 		ReloadListenerRegistries.INSTANCE.assets().register(CatnipReloadListener.ID, CatnipReloadListener.INSTANCE);
-		HudElements.INSTANCE.register(Catnip.id("placement_helper"), PlacementClient::renderCrosshairOverlay);
 	}
 
 	private static void beforeClientTick() {
