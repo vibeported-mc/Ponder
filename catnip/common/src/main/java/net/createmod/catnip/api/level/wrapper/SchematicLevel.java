@@ -54,6 +54,16 @@ public class SchematicLevel extends WrappedLevel implements ServerLevelAccessor,
 	protected List<Entity> entities;
 	protected BoundingBox bounds;
 
+	/**
+	 * <h2>26.2 note</h2>
+	 * <p>An entity's id is no longer a field that happens to be zero until something sets it --
+	 * {@code Entity#getId} throws "Tried to access entity ID before ID assignment" while it still is.
+	 * Renderers ask for it: an item entity's cluster render state seeds its layout from the id, so a
+	 * ponder scene with a dropped item in it crashed the frame it was drawn. Nothing here is on a
+	 * network, so any distinct non-zero number will do.
+	 */
+	private int nextEntityId = 1;
+
 	public BlockPos anchor;
 	public boolean renderMode;
 
@@ -86,6 +96,7 @@ public class SchematicLevel extends WrappedLevel implements ServerLevelAccessor,
 				armorStand.setItemSlot(equipmentSlot,
 					ComponentProcessors.withUnsafeComponentsDiscarded(armorStand.getItemBySlot(equipmentSlot)));
 
+		entityIn.setId(this.nextEntityId++);
 		return entities.add(entityIn);
 	}
 
