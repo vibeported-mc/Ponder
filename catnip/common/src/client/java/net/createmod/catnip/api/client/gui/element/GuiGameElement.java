@@ -27,6 +27,8 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
 
 public class GuiGameElement {
+
+
     public static GuiRenderBuilder of(ItemStack stack) {
         return new GuiItemRenderBuilder(stack);
     }
@@ -97,8 +99,12 @@ public class GuiGameElement {
         }
 
         public GuiRenderBuilder rotateBlock(double xRot, double yRot, double zRot) {
+            // The middle of the block, all three axes: VecHelper.getCenterOf(BlockPos.ZERO) on 1.21.1.
+            // Leaving the depth at zero pivots about the block's front face, so anything turned about
+            // Y -- a cogwheel, the millstone's runner -- swings through half a block instead of
+            // spinning on its axis.
             return this.rotate(xRot, yRot, zRot)
-                    .withRotationOffset(new Vector2f(0.5f, 0.5f));
+                    .withRotationOffset(0.5f, 0.5f, 0.5f);
         }
 
         public GuiRenderBuilder scale(double scale) {
@@ -166,7 +172,8 @@ public class GuiGameElement {
             return new GuiElementTransform(xLocal, yLocal, zLocal,
                 (float) viewXRot, (float) viewYRot, (float) viewZRot,
                 (float) xRot, (float) yRot, (float) zRot,
-                rotationOffset.x, rotationOffset.y, rotationOffsetZ);
+                rotationOffset.x, rotationOffset.y, rotationOffsetZ,
+                Objects.requireNonNullElse(customLighting, ILightingSettings.ITEMS_3D));
         }
 
         protected void cleanUpMatrix(Matrix3x2fStack poseStack) {
@@ -191,7 +198,7 @@ public class GuiGameElement {
 
         @Override
         protected float scaleUnit() {
-            return 1 / 16f;
+            return 1f / GuiElementTransform.unitsPerBlock(scale);
         }
 
         protected BlockState blockState;
@@ -221,11 +228,11 @@ public class GuiGameElement {
 
         protected void submitModel(GuiGraphicsExtractor graphics) {
 			graphics.guiRenderState.addPicturesInPictureState(
-				new GuiBlockModelRenderState(blockState, blockEntity,
+				new GuiBlockModelRenderState(blockState, blockStateModel, blockEntity,
 					new Matrix3x2f(graphics.pose()),
 					elementTransform(),
 					ARGB.color(255, color),
-					0, 0, 16, 16, 1,
+					GuiElementTransform.boxMin(scale), GuiElementTransform.boxMin(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.unitsPerBlock(scale),
 					null, null
 				)
 			);
@@ -252,7 +259,7 @@ public class GuiGameElement {
 			BlockState stateBefore = blockEntity.getBlockState();
 			blockEntity.setBlockState(this.blockState);
 			net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState blockEntityRenderState = Minecraft.getInstance().getBlockEntityRenderDispatcher().tryExtractRenderState(blockEntity, Minecraft.getInstance().getDeltaTracker().getRealtimeDeltaTicks(), null, false);
-			graphics.guiRenderState.addPicturesInPictureState(new GuiBlockEntityRenderState(blockEntityRenderState, new Matrix3x2f(graphics.pose()), elementTransform(), 0, 0, 16, 16, 1, null, null));
+			graphics.guiRenderState.addPicturesInPictureState(new GuiBlockEntityRenderState(blockEntityRenderState, new Matrix3x2f(graphics.pose()), elementTransform(), GuiElementTransform.boxMin(scale), GuiElementTransform.boxMin(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.unitsPerBlock(scale), null, null));
 			blockEntity.setBlockState(stateBefore);
         }
     }
@@ -276,7 +283,7 @@ public class GuiGameElement {
             if (blockState.getFluidState().isEmpty()) return;
 
 			graphics.guiRenderState.addPicturesInPictureState(new GuiFluidStateRenderState(blockState.getFluidState(), new Matrix3x2f(graphics.pose()),
-				elementTransform(), 0, 0, 16, 16, 1, null, null));
+				elementTransform(), GuiElementTransform.boxMin(scale), GuiElementTransform.boxMin(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.unitsPerBlock(scale), null, null));
         }
     }
 

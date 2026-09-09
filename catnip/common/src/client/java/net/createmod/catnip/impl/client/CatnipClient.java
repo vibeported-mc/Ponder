@@ -39,6 +39,15 @@ public final class CatnipClient {
 		// enqueued from client setup gets a turn, so anything registered there arrives too late to
 		// be drawn.
 		HudElements.INSTANCE.register(Catnip.id("placement_helper"), PlacementClient::renderCrosshairOverlay);
+
+		// And these for the same reason. The picture-in-picture renderers are gathered when the game
+		// builds its GUI renderer, which happens before the work enqueued from client setup runs --
+		// so registering them in init put them in a map that had already been read. Nothing said so:
+		// a state whose class has no registered renderer is simply never drawn, which emptied every
+		// block out of every Create screen, JEI recipe panels included.
+		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiBlockModelRenderState.class, GuiBlockModelRenderer::new);
+		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiBlockEntityRenderState.class, GuiBlockEntityRenderer::new);
+		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiFluidStateRenderState.class, GuiFluidStateRenderer::new);
 	}
 
 	public static void init() {
@@ -49,10 +58,6 @@ public final class CatnipClient {
 		LevelRendererReloadCallback.EVENT.subscribe(CatnipClient::onRendererReload);
 		LevelRenderCallback.SUBMIT_FEATURES.subscribe(CatnipClient::onSubmitFeatures);
 		AtlasStitchedCallback.EVENT.subscribe(StitchedSprite::afterAtlasStitch);
-
-		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiBlockModelRenderState.class, GuiBlockModelRenderer::new);
-		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiBlockEntityRenderState.class, GuiBlockEntityRenderer::new);
-		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(GuiFluidStateRenderState.class, GuiFluidStateRenderer::new);
 
 		ReloadListenerRegistries.INSTANCE.assets().register(CatnipReloadListener.ID, CatnipReloadListener.INSTANCE);
 	}

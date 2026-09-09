@@ -91,6 +91,17 @@ public final class BakedModelBuffererImpl {
 
 		VertexConsumer buffer = bufferSource.getBuffer(defaultLayer, false);
 
+		if (buffer == null) {
+			// The caller wanted a different layer than the one this model belongs to, and said so by
+			// answering null. That is a supported answer, not a mistake: `GuiBlockModelRenderer` asks
+			// once per render type without knowing which layer the model is in, and relies on the
+			// ones that do not match producing nothing. Dereferencing it instead threw a
+			// NullPointerException out of the render frame and took the game down the moment any
+			// block was drawn into a GUI.
+			poseStack.popPose();
+			return;
+		}
+
 		QuadInstance instance = new QuadInstance();
 		boolean useAo = Minecraft.getInstance().gameRenderer.gameRenderState().optionsRenderState.ambientOcclusion;
 		int light = LightCoordsUtil.pack(level.getBrightness(LightLayer.BLOCK, pos), level.getBrightness(LightLayer.SKY, pos));

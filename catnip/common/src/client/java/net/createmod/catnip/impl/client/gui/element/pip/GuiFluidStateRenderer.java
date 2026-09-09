@@ -4,6 +4,8 @@ import com.mojang.blaze3d.vertex.PoseStack;
 
 import net.createmod.catnip.api.client.gui.render.pip.GuiFluidStateRenderState;
 import net.createmod.catnip.api.client.platform.ModClientHooksHelper;
+import net.createmod.catnip.api.client.gui.render.pip.SmoothPipBlit;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 
@@ -15,8 +17,13 @@ public class GuiFluidStateRenderer extends PictureInPictureRenderer<GuiFluidStat
 
 	@Override
 	protected void renderToTexture(GuiFluidStateRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
-		renderState.transform().apply(poseStack);
+		renderState.transform().apply(poseStack, renderState.y0(), renderState.scale());
 		ModClientHooksHelper.INSTANCE.submitFullFluidState(poseStack, submitNodeCollector, renderState.fluidState());
+	}
+
+	@Override
+	protected void blitTexture(GuiFluidStateRenderState renderState, GuiRenderState guiRenderState) {
+		SmoothPipBlit.blit(this, renderState, guiRenderState);
 	}
 
 	@Override

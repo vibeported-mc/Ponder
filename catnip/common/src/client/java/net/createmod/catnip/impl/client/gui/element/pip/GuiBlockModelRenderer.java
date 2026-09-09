@@ -7,6 +7,8 @@ import net.createmod.catnip.api.client.level.SinglePosVirtualBlockGetter;
 import net.createmod.catnip.api.client.render.model.BakedModelBufferer;
 import net.createmod.catnip.impl.client.render.ColoringVertexConsumer;
 import net.minecraft.client.Minecraft;
+import net.createmod.catnip.api.client.gui.render.pip.SmoothPipBlit;
+import net.minecraft.client.renderer.state.gui.GuiRenderState;
 import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
 import net.minecraft.client.renderer.Sheets;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -16,6 +18,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.util.ARGB;
 
 public class GuiBlockModelRenderer extends PictureInPictureRenderer<GuiBlockModelRenderState> {
+
 	@Override
 	public Class<GuiBlockModelRenderState> getRenderStateClass() {
 		return GuiBlockModelRenderState.class;
@@ -23,17 +26,17 @@ public class GuiBlockModelRenderer extends PictureInPictureRenderer<GuiBlockMode
 
 	@Override
 	protected void renderToTexture(GuiBlockModelRenderState renderState, PoseStack poseStack, SubmitNodeCollector submitNodeCollector) {
-		renderState.transform().apply(poseStack);
+		renderState.transform().apply(poseStack, renderState.y0(), renderState.scale());
 
 		SinglePosVirtualBlockGetter level = SinglePosVirtualBlockGetter.createFullBright();
 		level.blockState(renderState.state());
 		level.blockEntity(renderState.blockEntity());
 
 		int color = renderState.color();
-		var model = Minecraft.getInstance()
-			.getModelManager()
-			.getBlockStateModelSet()
-			.get(renderState.state());
+		// The model the element was built with, rather than the one this state's block would have.
+		// They are the same for a block; for a partial model the state is only a stand-in and asking
+		// the model set for it returns air's empty model.
+		var model = renderState.model();
 
 		// A tint has to be applied per vertex, so the model is buffered inside a custom geometry node
 		// rather than submitted as a block model.
@@ -56,6 +59,11 @@ public class GuiBlockModelRenderer extends PictureInPictureRenderer<GuiBlockMode
 					(bufferedLayer, shade) -> bufferedLayer == layer ? tinted : null);
 			});
 		}
+	}
+
+	@Override
+	protected void blitTexture(GuiBlockModelRenderState renderState, GuiRenderState guiRenderState) {
+		SmoothPipBlit.blit(this, renderState, guiRenderState);
 	}
 
 	@Override

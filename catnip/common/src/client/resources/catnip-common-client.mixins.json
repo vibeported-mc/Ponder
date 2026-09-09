@@ -8,6 +8,7 @@
     "ClientPacketListenerAccessor",
     "LightingAccessor",
     "ParticleEngineAccessor",
+    "PictureInPictureRendererAccessor",
     "RenderTypeAccessor",
     "ScreenAccessor",
     "TimerAccessor"
