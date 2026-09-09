@@ -46,3 +46,4 @@ docs/*.sw?
 
 # exclude generated package info files
 **/generatedPackageInfos/**
+.vscode/
