@@ -90,11 +90,18 @@ public class LangBuilder {
 	/**
 	 * Appends a component
 	 *
+	 * <p>Copied when it is the first thing added, because everything after it appends to whatever is
+	 * held here - and appending to a component the caller handed over would edit theirs. On 1.21.1
+	 * nothing noticed: an item's name was built fresh for each call. 26.2 returns the {@code ITEM_NAME}
+	 * data component itself, which every stack of that item shares, so
+	 * {@code builder().add(stack.getHoverName()).text(" x33")} wrote " x33" into the name of that item
+	 * everywhere it is ever shown, once per render, and styling the builder recoloured it for good.
+	 *
 	 * @param customComponent
 	 * @return
 	 */
 	public LangBuilder add(MutableComponent customComponent) {
-		component = component == null ? customComponent : component.append(customComponent);
+		component = component == null ? customComponent.copy() : component.append(customComponent);
 		return this;
 	}
 
