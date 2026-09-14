@@ -61,6 +61,11 @@ public class SchematicLevel extends WrappedLevel implements ServerLevelAccessor,
 	 * Renderers ask for it: an item entity's cluster render state seeds its layout from the id, so a
 	 * ponder scene with a dropped item in it crashed the frame it was drawn. Nothing here is on a
 	 * network, so any distinct non-zero number will do.
+	 *
+	 * <p>The constructor of {@code Entity} takes its id from {@link #getNextEntityId}, which a plain
+	 * {@code Level} answers with zero. Answering here gives an id to every entity built in this level,
+	 * including those a ponder element makes and draws itself without ever adding them -- the parrots
+	 * and minecarts, whose render states ask for it all the same.
 	 */
 	private int nextEntityId = 1;
 
@@ -96,8 +101,14 @@ public class SchematicLevel extends WrappedLevel implements ServerLevelAccessor,
 				armorStand.setItemSlot(equipmentSlot,
 					ComponentProcessors.withUnsafeComponentsDiscarded(armorStand.getItemBySlot(equipmentSlot)));
 
-		entityIn.setId(this.nextEntityId++);
+		// Built in another level, an entity arrives with that level's id, or none.
+		entityIn.setId(getNextEntityId());
 		return entities.add(entityIn);
+	}
+
+	@Override
+	public int getNextEntityId() {
+		return nextEntityId++;
 	}
 
 	@Override

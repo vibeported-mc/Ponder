@@ -121,7 +121,9 @@ public class PonderLevel extends SchematicLevel implements BlockAndTintGetter {
 				TagValueOutput output = TagValueOutput.createWithContext(reporter, registryAccess());
 				e.save(output);
 				ValueInput input = TagValueInput.create(reporter, registryAccess(), output.buildResult());
-				EntityType.create(input, this, new EntitySpawnRequest(EntitySpawnReason.LOAD, false)).ifPresent(originalEntities::add);
+				// Back into the scene, as 1.21.1 did. Adding to originalEntities instead grew the list being
+				// walked and left the restarted scene without them.
+				EntityType.create(input, this, new EntitySpawnRequest(EntitySpawnReason.LOAD, false)).ifPresent(entities::add);
 			}
 		});
 		particles.clearEffects();
