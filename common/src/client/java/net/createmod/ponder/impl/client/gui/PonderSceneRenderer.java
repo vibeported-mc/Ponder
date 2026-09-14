@@ -4,6 +4,8 @@ package net.createmod.ponder.impl.client.gui;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import org.joml.Matrix4f;
 
+import com.mojang.blaze3d.ProjectionType;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 
@@ -13,14 +15,38 @@ import net.createmod.catnip.api.theme.Color;
 import net.createmod.ponder.api.client.scene.PonderScene;
 import net.createmod.ponder.api.client.scene.PonderScene.SceneTransform;
 import net.minecraft.client.gui.render.pip.PictureInPictureRenderer;
+import net.minecraft.client.renderer.Projection;
+import net.minecraft.client.renderer.ProjectionMatrixBuffer;
 
 public class PonderSceneRenderer extends PictureInPictureRenderer<PonderSceneRenderState> {
+	/**
+	 * How deep a scene may be either side of the screen, in GUI units.
+	 *
+	 * <p>Vanilla gives a picture-in-picture a projection 1000 deep either way, in framebuffer pixels. A
+	 * scene is scaled to framebuffer pixels by the GUI scale, but still pushed back a fixed 800 and then
+	 * tilted, so past a GUI scale of about three the far rows of a large plate went beyond the far plane
+	 * and were cut off along a straight line. In 1.21.1 a scene was drawn under the whole GUI's
+	 * projection, 20000 GUI units deep in all; this gives it that again at any GUI scale, and with it the
+	 * same depth precision.
+	 */
+	private static final float DEPTH = 10000;
+
+	private final Projection projection = new Projection();
+	private final ProjectionMatrixBuffer projectionBuffer = new ProjectionMatrixBuffer("PIP - PonderScene, deep");
+
 	/**
 	 * Minecraft 26.2 hands the collector in and executes the collected nodes itself once this
 	 * returns, so there is no buffer source to flush any more.
 	 */
 	@Override
 	protected void renderToTexture(PonderSceneRenderState state, PoseStack poseStack, SubmitNodeCollector queue) {
+		// Replaces the shallow projection vanilla has just set. It stays set while the collected nodes are
+		// drawn, which happens as soon as this returns, and the next picture-in-picture sets its own.
+		int guiScale = state.window().guiScale;
+		float depth = DEPTH * guiScale;
+		projection.setupOrtho(-depth, depth, (state.x1() - state.x0()) * guiScale, (state.y1() - state.y0()) * guiScale, true);
+		RenderSystem.setProjectionMatrix(projectionBuffer.getBuffer(projection), ProjectionType.ORTHOGRAPHIC);
+
 		poseStack.pushPose();
 		poseStack.setIdentity();
 
@@ -140,6 +166,12 @@ public class PonderSceneRenderer extends PictureInPictureRenderer<PonderSceneRen
 			buffer.addVertex(matrix, x1, y1, 0).setColor(col2);
 			buffer.addVertex(matrix, x1, y0, 0).setColor(col1);
 		});
+	}
+
+	@Override
+	public void close() {
+		super.close();
+		projectionBuffer.close();
 	}
 
 	@Override
