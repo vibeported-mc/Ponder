@@ -20,13 +20,12 @@ import net.createmod.catnip.api.client.lang.FontHelper;
 import net.createmod.catnip.api.client.lang.FontHelper.Palette;
 import net.createmod.catnip.api.config.ConfigHelper;
 import net.createmod.catnip.api.data.Pair;
-import net.createmod.catnip.config.ui.ConfigScreenList;
-import net.createmod.catnip.config.ui.SubMenuConfigScreen;
-import net.createmod.ponder.enums.PonderGuiTextures;
+import net.createmod.catnip.api.client.config.ConfigScreenList;
+import net.createmod.catnip.api.client.gui.texture.CatnipGuiTextures;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
-import net.minecraft.client.gui.screens.Screen;
+import net.minecraft.client.gui.Font;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.Component;
 
@@ -43,15 +42,17 @@ public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 	protected ModConfigSpec.ValueSpec spec;
 	protected BoxWidget resetButton;
 	protected boolean editable = true;
+	protected final ModConfig.Type type;
 
-	public ValueEntry(String label, ModConfigSpec.ConfigValue<T> value, ModConfigSpec.ValueSpec spec) {
+	public ValueEntry(String label, ModConfigSpec.ConfigValue<T> value, ModConfigSpec.ValueSpec spec, ModConfig.Type type) {
 		super(label);
 		this.value = value;
 		this.spec = spec;
+		this.type = type;
 		this.path = String.join(".", value.getPath());
 
 		resetButton = new BoxWidget(0, 0, resetWidth - 12, 16)
-			.showingElement(PonderGuiTextures.ICON_CONFIG_RESET.asStencil())
+			.showingElement(CatnipGuiTextures.ICON_CONFIG_RESET.asStencil())
 			.withCallback(() -> {
 				setValue((T) spec.getDefault());
 				this.onReset();
@@ -91,7 +92,15 @@ public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 		if (annotations.containsKey(ConfigAnnotations.RequiresRestart.CLIENT.getName()))
 			labelTooltip.addAll(FontHelper.cutTextComponent(Component.translatable("catnip.ui.value_entry.restart_required"), Palette.GRAY_AND_RED));
 
-		labelTooltip.add(Component.literal(ConfigScreen.modID + ":" + path.get(path.size() - 1)).withStyle(ChatFormatting.DARK_GRAY));
+		String fullPath = ConfigScreen.modID + ":" + type.extension() + "." + String.join(".", path);
+		Font font = Minecraft.getInstance().font;
+		if (font.width(fullPath) > FontHelper.MAX_WIDTH_PER_LINE) {
+			int trimPos = 0;
+			while (trimPos < fullPath.length() && font.width("..." + fullPath.substring(trimPos)) > FontHelper.MAX_WIDTH_PER_LINE)
+				trimPos++;
+			fullPath = "..." + fullPath.substring(trimPos);
+		}
+		labelTooltip.add(Component.literal(fullPath).withStyle(ChatFormatting.DARK_GRAY));
 	}
 
 	@Override
@@ -121,28 +130,20 @@ public class ValueEntry<T> extends ConfigScreenList.LabeledEntry {
 			return false;
 		}
 
-		// workaround while config type isn't available here yet.
-		ModConfig.Type configType = ModConfig.Type.CLIENT;
-		Screen screen = Minecraft.getInstance().gui.screen();
-		if (screen instanceof SubMenuConfigScreen subMenuScreen) {
-			configType = subMenuScreen.type;
-		}
-
-
 		// ctrl-click to copy the full path to clipboard
 		this.annotations.put("highlight", ":)");
-		clipboardHelper.setClipboard(window, ConfigScreen.modID + ":" + configType.extension() + "." + path);
+		clipboardHelper.setClipboard(window, ConfigScreen.modID + ":" + type.extension() + "." + path);
 
 		return true;
 	}
 
 	@Override
-	public void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
-		super.renderContent(graphics, mouseX, mouseY, isHovering, partialTick);
+	public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
+		super.extractContent(graphics, mouseX, mouseY, isHovering, partialTick);
 
 		resetButton.setX(getX() + getWidth() - resetWidth + 6);
-		resetButton.setX(getY() + 10);
-		resetButton.render(graphics, mouseX, mouseY, partialTick);
+		resetButton.setY(getY() + 10);
+		resetButton.extractRenderState(graphics, mouseX, mouseY, partialTick);
 	}
 
 	@Override

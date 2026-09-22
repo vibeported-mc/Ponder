@@ -1,6 +1,9 @@
 package net.createmod.catnip.api.client.config;
 
+import org.jspecify.annotations.Nullable;
+
 import com.mojang.blaze3d.platform.InputConstants;
+
 
 import net.createmod.catnip.api.client.gui.UIRenderHelper;
 import net.minecraft.client.Minecraft;
@@ -10,17 +13,21 @@ import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.input.MouseButtonEvent;
 import net.minecraft.network.chat.CommonComponents;
+import net.minecraft.network.chat.Component;
 
 public class HintableTextFieldWidget extends EditBox {
 	protected Font font;
-	protected String hint = "";
+	@Nullable
+	private Component hint;
 
 	public HintableTextFieldWidget(Font font, int x, int y, int width, int height) {
 		super(font, x, y, width, height, CommonComponents.EMPTY);
 		this.font = font;
+		this.setMaxLength(128);
 	}
 
-	public void setHint(String hint) {
+	@Override
+	public void setHint(Component hint) {
 		this.hint = hint;
 	}
 
@@ -28,13 +35,13 @@ public class HintableTextFieldWidget extends EditBox {
 	public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		super.extractWidgetRenderState(graphics, mouseX, mouseY, partialTicks);
 
-		if (hint.isEmpty())
+		if (hint == null || hint.getString().isEmpty())
 			return;
 
 		if (!getValue().isEmpty())
 			return;
 
-		graphics.text(font, hint, getX() + 5, this.getY() + (this.height - 8) / 2, UIRenderHelper.COLOR_TEXT.getFirst().scaleAlpha(.75f).getRGB());
+		graphics.text(font, hint, getX() + 5, this.getY() + (this.height - 8) / 2, UIRenderHelper.COLOR_TEXT.getFirst().scaleAlpha(.6f).getRGB());
 	}
 
 	@Override

@@ -25,7 +25,7 @@ public record ClientboundSimpleActionPacket(String action, String value) impleme
 
 	static {
 		addAction("test", () -> System.out::println);
-		addAction("configScreen", () -> SimpleCatnipActions::configScreen);
+		// "configScreen" opens a screen, so the client registers it (CatnipClientPayloadHandlers)
 	}
 
 	@Override

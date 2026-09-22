@@ -25,6 +25,12 @@ public record GuiBlockModelRenderState(
 	Matrix3x2f pose,
 	GuiElementTransform transform,
 	int color,
+	/**
+	 * Tints the finished picture as it is blitted into the GUI, -1 for none. Unlike {@link #color},
+	 * which tints the model's faces, this applies to the rendered result, so a translucent black
+	 * turns the model into a shadow of its own silhouette.
+	 */
+	int blitColor,
 	int x0, int y0,
 	int x1, int y1,
 	float scale, @Nullable ScreenRectangle scissorArea, @Nullable ScreenRectangle bounds

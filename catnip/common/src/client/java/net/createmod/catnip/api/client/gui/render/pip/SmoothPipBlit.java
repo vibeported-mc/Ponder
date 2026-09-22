@@ -33,6 +33,15 @@ public final class SmoothPipBlit {
 
 	public static void blit(PictureInPictureRenderer<?> renderer, PictureInPictureRenderState renderState,
 		GuiRenderState guiRenderState) {
+		blit(renderer, renderState, guiRenderState, -1);
+	}
+
+	/**
+	 * @param color multiplies the picture, alpha included; the pipeline is premultiplied, so a
+	 *              translucent black darkens by the picture's own coverage
+	 */
+	public static void blit(PictureInPictureRenderer<?> renderer, PictureInPictureRenderState renderState,
+		GuiRenderState guiRenderState, int color) {
 
 		guiRenderState.addBlitToCurrentLayer(new BlitRenderState(
 			RenderPipelines.GUI_TEXTURED_PREMULTIPLIED_ALPHA,
@@ -41,7 +50,7 @@ public final class SmoothPipBlit {
 			renderState.pose(),
 			renderState.x0(), renderState.y0(), renderState.x1(), renderState.y1(),
 			0.0F, 1.0F, 1.0F, 0.0F,
-			-1,
+			color,
 			renderState.scissorArea(),
 			null));
 	}

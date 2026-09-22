@@ -1,17 +1,13 @@
 package net.createmod.catnip.api.client.config;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 
 import org.jspecify.annotations.Nullable;
-
-import com.mojang.blaze3d.opengl.GlStateManager;
-import com.mojang.blaze3d.platform.Window;
-import com.mojang.blaze3d.systems.RenderSystem;
 
 import net.createmod.catnip.api.animation.LerpedFloat;
 import net.createmod.catnip.api.animation.LerpedFloat.Chaser;
@@ -39,39 +35,38 @@ public class ConfigScreenList extends ObjectSelectionList<ConfigScreenList.Entry
 	@Nullable
 	public static EditBox currentText;
 
+	/** What the list shows with no search: this menu's own entries. */
+	@Nullable
+	public List<Entry> allEntries;
+
+	/** What a search looks through: every value in this menu and the menus below it. */
+	@Nullable
+	public List<Entry> deepEntries;
+
 	public ConfigScreenList(Minecraft client, int width, int height, int top, int elementHeight) {
 		super(client, width, height, top, elementHeight);
 		currentText = null;
 	}
 
 	@Override
-	public void render(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
+	public void extractWidgetRenderState(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		Color c = new Color(0x60_000000);
 		UIRenderHelper.angledGradient(graphics, 90, getX() + width / 2, getY(), width, 5, c, Color.TRANSPARENT_BLACK);
 		UIRenderHelper.angledGradient(graphics, -90, getX() + width / 2, getBottom(), width, 5, c, Color.TRANSPARENT_BLACK);
 		UIRenderHelper.angledGradient(graphics, 0, getX(), getY() + height / 2, height, 5, c, Color.TRANSPARENT_BLACK);
 		UIRenderHelper.angledGradient(graphics, 180, getRight(), getY() + height / 2, height, 5, c, Color.TRANSPARENT_BLACK);
 
-		super.render(graphics, mouseX, mouseY, partialTicks);
+		// the scissor this sets up clips the entries themselves, and 26.2 applies it per render
+		// state, so neither the old manual GL scissor nor the flush before it is needed
+		super.extractWidgetRenderState(graphics, mouseX, mouseY, partialTicks);
 	}
+
+	// Catnip draws its own shading above; not vanilla's list texture and separators
+	@Override
+	protected void extractListBackground(GuiGraphicsExtractor graphics) {}
 
 	@Override
-	protected void renderListItems(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
-		Window window = minecraft.getWindow();
-		double d0 = window.getGuiScale();
-		// TODO - Check is this still works here
-		RenderSystem.enableScissorForRenderTypeDraws((int) (getX() * d0), (int) (window.getHeight() - (getBottom() * d0)), (int) (this.width * d0), (int) (this.height * d0));
-		super.renderListItems(graphics, mouseX, mouseY, partialTick);
-		RenderSystem.disableScissorForRenderTypeDraws();
-	}
-
-	@Override
-	public boolean mouseClicked(MouseButtonEvent event, boolean doubleClick) {
-		//children().stream().filter(e -> e instanceof NumberEntry<?>).forEach(e -> e.mouseClicked(buttonEvent, doubleClick));
-		//children().stream().filter(e -> e instanceof StringEntry).forEach(e -> e.mouseClicked(buttonEvent, doubleClick));
-
-		return super.mouseClicked(event, doubleClick);
-	}
+	protected void extractListSeparators(GuiGraphicsExtractor graphics) {}
 
 	@Override
 	public int getRowWidth() {
@@ -85,41 +80,105 @@ public class ConfigScreenList extends ObjectSelectionList<ConfigScreenList.Entry
 
 	@Override
 	public void tick() {
-		/*for(int i = 0; i < getItemCount(); ++i) {
-			int top = this.getRowTop(i);
-			int bot = top + itemHeight;
-			if (bot >= this.y0 && top <= this.y1)
-				this.getEntry(i).tick();
-		}*/
 		children().forEach(Entry::tick);
-
 	}
 
-	public boolean search(String query) {
-		if (query.isEmpty()) {
-			setScrollAmount(0);
+	/**
+	 * 26.2 hands out {@link #children()} read-only, so entries go in through the list, which also
+	 * positions them.
+	 */
+	public void addConfigEntry(Entry entry) {
+		addEntry(entry);
+	}
+
+	@Override
+	public void clearEntries() {
+		super.clearEntries();
+	}
+
+	public void sortEntries(Comparator<Entry> comparator) {
+		sort(comparator);
+	}
+
+	public boolean search(@Nullable String query) {
+		clearEntries();
+		setScrollAmount(0);
+
+		if (query == null || query.trim().isEmpty()) {
+			if (allEntries != null)
+				allEntries.forEach(this::addEntry);
 			return true;
 		}
 
-		String q = query.toLowerCase(Locale.ROOT);
-		Optional<Entry> first = children().stream().filter(entry -> {
-			if (entry.path == null)
-				return false;
+		List<Entry> source =
+			deepEntries != null ? deepEntries
+			: allEntries != null ? allEntries
+			: List.of();
 
-			String[] split = entry.path.split("\\.");
-			String key = split[split.length - 1].toLowerCase(Locale.ROOT);
-			return key.contains(q);
-		}).findFirst();
+		String q = query.toLowerCase(Locale.ROOT).replaceAll("\\s+", "");
+		List<Entry> searchResults = source.stream()
+			.filter(entry -> entry.path != null)
+			.map(entry -> {
+				String[] parts = entry.path.split("\\.");
+				String key = parts[parts.length - 1].toLowerCase(Locale.ROOT);
+				float distance = relevanceScore(q, key);
+				return Map.entry(entry, distance);
+			})
+			.filter(map -> map.getValue() <= 0.8)
+			.sorted(Map.Entry.comparingByValue())
+			.map(Map.Entry::getKey)
+			.toList();
 
-		if (first.isEmpty()) {
-			setScrollAmount(0);
+		if (searchResults.isEmpty()) {
 			return false;
 		}
 
-		Entry e = first.get();
-		e.annotations.put("highlight", "(:");
-		centerScrollOn(e);
+		searchResults.forEach(this::addEntry);
+
 		return true;
+	}
+
+	private static float relevanceScore(String query, String target) {
+		int m = query.length();
+		int n = target.length();
+		int[][] table = new int[m + 1][n + 1];
+
+		// Levenshtein Distance Algorithm
+		// First row stays 0: no cost to skip leading target characters,
+		// allowing the query to match against any substring of the target.
+		for (int i = 0; i <= m; i++) table[i][0] = i;
+
+		for (int i = 1; i <= m; i++) {
+			for (int j = 1; j <= n; j++) {
+				if (query.charAt(i - 1) == target.charAt(j - 1)) {
+					table[i][j] = table[i - 1][j - 1];
+				} else {
+					table[i][j] = Math.min(table[i - 1][j - 1], Math.min(
+						table[i][j - 1],
+						table[i - 1][j]
+					)) + 1;
+				}
+			}
+		}
+
+		// Minimum over all end positions: best substring match within target
+		int rawDistance = Integer.MAX_VALUE;
+		for (int j = 0; j <= n; j++) {
+			rawDistance = Math.min(rawDistance, table[m][j]);
+		}
+
+		// Reject matches that exceed the maximum allowed edits for this query length
+		int maxEdits = Math.max(0, m / 3);
+		if (rawDistance > maxEdits)
+			return 1.0f;
+
+		// Normalize
+		float result = (float) rawDistance / m;
+
+		// Match boosting
+		result = target.contains(query) ? result * 0.5f : result;
+
+		return result;
 	}
 
 	public void bumpCog(float force) {
@@ -206,7 +265,7 @@ public class ConfigScreenList extends ObjectSelectionList<ConfigScreenList.Entry
 		}
 
 		@Override
-		public void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
+		public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
 			if (isCurrentValueChanged()) {
 				if (differenceAnimation.getChaseTarget() != 1)
 					differenceAnimation.chase(1, .5f, Chaser.EXP);
@@ -263,13 +322,8 @@ public class ConfigScreenList extends ObjectSelectionList<ConfigScreenList.Entry
 				if (tooltip.isEmpty())
 					return;
 
-				RenderSystem.disableScissorForRenderTypeDraws(); // TODO - Check if this is correct
-				graphics.pose().pushMatrix();
+				// deferred to the end of the frame, outside the list's scissor
 				graphics.setComponentTooltipForNextFrame(font, tooltip, mouseX, mouseY);
-				//graphics.flush(); TODO - Is there an replacement?
-				//RemovedGuiUtils.drawHoveringText(ms, tooltip, mouseX, mouseY, screen.width, screen.height, 300, font);
-				graphics.pose().popMatrix();
-				GlStateManager._enableScissorTest();
 			}
 		}
 
@@ -282,7 +336,6 @@ public class ConfigScreenList extends ObjectSelectionList<ConfigScreenList.Entry
 			return totalWidth;
 		}
 
-		// TODO 1.17
 		@Override
 		public Component getNarration() {
 			return CommonComponents.EMPTY;

@@ -4,16 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-import org.lwjgl.opengl.GL30;
 
-import com.mojang.blaze3d.opengl.GlStateManager;
 
 import net.createmod.catnip.api.client.gui.element.BoxElement;
 import net.createmod.catnip.api.client.gui.element.TextStencilElement;
 import net.createmod.catnip.api.client.gui.widget.AbstractSimiWidget;
 import net.createmod.catnip.api.client.gui.widget.BoxWidget;
 import net.createmod.catnip.api.client.platform.ModClientHooksHelper;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -89,11 +86,15 @@ public class ConfirmationScreen extends AbstractSimiScreen {
 		return this;
 	}
 
+	/**
+	 * <h2>26.2 note</h2>
+	 * <p>1.21.1 swapped itself in as the current screen behind the game's back, so the source was
+	 * neither closed nor re-initialised, and drew the source underneath itself every frame. NeoForge
+	 * now has screen layers for exactly that: the source stays open beneath, and is drawn there.
+	 */
 	public void open(Screen source) {
 		this.source = source;
-		Minecraft client = ModClientHooksHelper.INSTANCE.getMinecraftFromScreen(source);
-		this.init(client.getWindow().getGuiScaledWidth(), client.getWindow().getGuiScaledHeight());
-		this.minecraft.gui.screen() = this;
+		ModClientHooksHelper.INSTANCE.pushScreenLayer(this);
 	}
 
 	@Override
@@ -172,7 +173,7 @@ public class ConfirmationScreen extends AbstractSimiScreen {
 	}
 
 	private void accept(Response success) {
-		minecraft.gui.screen() = source;
+		ModClientHooksHelper.INSTANCE.popScreenLayer();
 		action.accept(success);
 	}
 
@@ -190,27 +191,10 @@ public class ConfirmationScreen extends AbstractSimiScreen {
 		}
 	}
 
+	// the source is drawn beneath as a screen layer; this only dims it, without the menu blur
 	@Override
-	protected void renderWindowBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
-		endFrame();
-
-		source.render(graphics, 0, 0, 10); // zero mouse coords to prevent further tooltips
-
-		prepareFrame();
-
+	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		graphics.fillGradient(0, 0, this.width, this.height, 0x70101010, 0x80101010);
-	}
-
-
-	@Override
-	protected void prepareFrame() {
-		GlStateManager._clear(GL30.GL_STENCIL_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
-	}
-
-	@Override
-	public void resize(int width, int height) {
-		super.resize(width, height);
-		source.resize(width, height);
 	}
 
 	@Override

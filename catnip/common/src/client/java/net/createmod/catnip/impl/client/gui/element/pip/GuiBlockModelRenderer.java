@@ -63,7 +63,7 @@ public class GuiBlockModelRenderer extends PictureInPictureRenderer<GuiBlockMode
 
 	@Override
 	protected void blitTexture(GuiBlockModelRenderState renderState, GuiRenderState guiRenderState) {
-		SmoothPipBlit.blit(this, renderState, guiRenderState);
+		SmoothPipBlit.blit(this, renderState, guiRenderState, renderState.blitColor());
 	}
 
 	@Override

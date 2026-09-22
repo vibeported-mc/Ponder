@@ -1,26 +1,33 @@
 package net.createmod.ponder.neoforge;
 
+import java.util.Map;
+
+import net.createmod.catnip.api.config.ConfigBase;
 import net.createmod.ponder.api.Ponder;
 import net.createmod.ponder.impl.command.PonderCommands;
+import net.createmod.ponder.impl.config.PonderConfig;
 
+import net.neoforged.bus.api.IEventBus;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.ModContainer;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.fml.event.config.ModConfigEvent;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
 
 @Mod(Ponder.MOD_ID)
 public class NeoForgePonder {
-	public NeoForgePonder(ModContainer container) {
+	public NeoForgePonder(ModContainer container, IEventBus modEventBus) {
 		registerConfigs(container);
+		modEventBus.addListener((ModConfigEvent.Loading event) -> PonderConfig.onLoad(event.getConfig()));
+		modEventBus.addListener((ModConfigEvent.Reloading event) -> PonderConfig.onReload(event.getConfig()));
 	}
 
 	private static void registerConfigs(ModContainer container) {
-		// FIXME: config
-		// Set<Map.Entry<ModConfig.Type, ConfigBase>> entries = PonderConfig.registerConfigs();
-		// for (Map.Entry<ModConfig.Type, ConfigBase> entry : entries) {
-		// 	continue;.registerConfig(entry.getKey(), entry.getValue().specification);
-		// }
+		for (Map.Entry<ModConfig.Type, ConfigBase> entry : PonderConfig.registerConfigs()) {
+			container.registerConfig(entry.getKey(), entry.getValue().specification);
+		}
 	}
 
 	@EventBusSubscriber
@@ -30,18 +37,4 @@ public class NeoForgePonder {
 			PonderCommands.register(event.getDispatcher());
 		}
 	}
-
-	// FIXME: config
-	// @EventBusSubscriber(bus = Bus.MOD)
-	// public static class ModBusEvents {
-	// 	@SubscribeEvent
-	// 	public static void onLoad(ModConfigEvent.Loading event) {
-	// 		PonderConfig.onLoad(event.getConfig());
-	// 	}
-	//
-	// 	@SubscribeEvent
-	// 	public static void onReload(ModConfigEvent.Reloading event) {
-	// 		PonderConfig.onReload(event.getConfig());
-	// 	}
-	// }
 }

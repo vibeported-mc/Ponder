@@ -3,11 +3,15 @@ package net.createmod.catnip.impl.network;
 import java.util.Objects;
 
 import io.netty.buffer.ByteBuf;
+import net.createmod.catnip.api.config.ConfigHelper;
 import net.createmod.catnip.api.network.SelfHandlingPayload;
+import net.minecraft.commands.Commands;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.server.level.ServerPlayer;
+import net.neoforged.fml.config.ModConfig;
+import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class ServerboundConfigPacket<T> implements SelfHandlingPayload {
 	public static final StreamCodec<ByteBuf, ServerboundConfigPacket<?>> STREAM_CODEC = StreamCodec.composite(
@@ -39,7 +43,8 @@ public class ServerboundConfigPacket<T> implements SelfHandlingPayload {
 	}
 
 	@Override
-	public void handle(ServerPlayer player) {/*
+	@SuppressWarnings("unchecked")
+	public void handle(ServerPlayer player) {
 		try {
 			if (!Commands.LEVEL_GAMEMASTERS.check(player.permissions()))
 				return;
@@ -55,9 +60,9 @@ public class ServerboundConfigPacket<T> implements SelfHandlingPayload {
 			configValue.set(v);
 			configValue.save();
 		} catch (Exception e) {
-			Ponder.LOGGER.warn("Unable to handle ConfigureConfig Packet. ", e);
+			ConfigHelper.LOGGER.warn("Unable to handle ConfigureConfig Packet. ", e);
 		}
-	*/}
+	}
 
 	public String serialize(T value) {
 		if (value instanceof Boolean)
@@ -70,6 +75,8 @@ public class ServerboundConfigPacket<T> implements SelfHandlingPayload {
 			return Float.toString((Float) value);
 		if (value instanceof Double)
 			return Double.toString((Double) value);
+		if (value instanceof String str)
+			return str;
 
 		throw new IllegalArgumentException("unknown type " + value + ": " + value.getClass().getSimpleName());
 	}
@@ -85,6 +92,8 @@ public class ServerboundConfigPacket<T> implements SelfHandlingPayload {
 			return Float.parseFloat(sValue);
 		if (type instanceof Double)
 			return Double.parseDouble(sValue);
+		if (type instanceof String)
+			return sValue;
 
 		throw new IllegalArgumentException("unknown type " + type + ": " + type.getClass().getSimpleName());
 	}

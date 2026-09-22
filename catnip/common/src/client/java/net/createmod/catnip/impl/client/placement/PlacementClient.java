@@ -2,6 +2,8 @@ package net.createmod.catnip.impl.client.placement;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.DoubleSupplier;
+import java.util.function.Supplier;
 
 import org.joml.Matrix3x2f;
 import org.joml.Matrix3x2fStack;
@@ -39,6 +41,20 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 
 public class PlacementClient {
+
+	public enum IndicatorStyle {
+		TEXTURE, TRIANGLE, NONE
+	}
+
+	/**
+	 * How the placement indicator is drawn, and at what size.
+	 *
+	 * <p>These are Ponder's client settings -- they were when catnip and Ponder were one mod, and
+	 * the config file still has them there -- but catnip cannot see Ponder, so Ponder points these
+	 * at its config when its client starts.
+	 */
+	public static Supplier<IndicatorStyle> indicatorStyle = () -> IndicatorStyle.TEXTURE;
+	public static DoubleSupplier indicatorScale = () -> 1;
 	static final LerpedFloat angle = LerpedFloat.angular()
 		.chase(0, 0.25f, LerpedFloat.Chaser.EXP);
 	@Nullable
@@ -188,13 +204,12 @@ public class PlacementClient {
 
 		float length = 10;
 
-		// FIXME: config
-		// CClient.PlacementIndicatorSetting mode = PonderConfig.client().placementIndicator.get();
-		// if (mode == CClient.PlacementIndicatorSetting.TRIANGLE) {
-			// fadedArrow(graphics, centerX, centerY, r, g, b, a, length);
-		// } else if (mode == CClient.PlacementIndicatorSetting.TEXTURE) {
+		IndicatorStyle mode = indicatorStyle.get();
+		if (mode == IndicatorStyle.TRIANGLE) {
+			fadedArrow(graphics, centerX, centerY, r, g, b, a, length);
+		} else if (mode == IndicatorStyle.TEXTURE) {
 			textured(graphics, centerX, centerY, a, snappedAngle);
-		// }
+		}
 	}
 
 	private static void fadedArrow(GuiGraphicsExtractor graphics, float centerX, float centerY, float r, float g, float b, float a, float length) {
@@ -202,8 +217,7 @@ public class PlacementClient {
 		poseStack.pushMatrix();
 		poseStack.translate(centerX, centerY);
 		poseStack.rotate(angle.getValue(0) * Constants.DEG_TO_RAD);
-		// FIXME: config
-		double scale = 1;//PonderConfig.client().indicatorScale.get();
+		double scale = indicatorScale.getAsDouble();
 		poseStack.scale((float) scale, (float) scale);
 
 		int size = (int) ((10 + length) * scale);
@@ -218,8 +232,7 @@ public class PlacementClient {
 		Matrix3x2fStack poseStack = graphics.pose();
 		poseStack.pushMatrix();
 		poseStack.translate(centerX, centerY);
-		// FIXME: config
-		float scale = /*PonderConfig.client().indicatorScale.get().floatValue()*/ 1 * .75f;
+		float scale = (float) indicatorScale.getAsDouble() * .75f;
 		poseStack.scale(scale, scale);
 		poseStack.scale(12, 12);
 

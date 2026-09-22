@@ -203,8 +203,9 @@ public class ConfigHelper {
 	}
 
 	public static class ConfigChange {
-		Object value;
-		Map<String, String> annotations = new HashMap<>();
+		// read by the config screens, which live in the client source set's own package
+		public final Object value;
+		public final Map<String, String> annotations = new HashMap<>();
 
 		ConfigChange(Object value) {
 			this.value = value;

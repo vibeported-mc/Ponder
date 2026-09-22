@@ -1,6 +1,5 @@
 package net.createmod.catnip.api.client.config.entries;
 
-import java.lang.reflect.Field;
 import java.util.Locale;
 import java.util.function.Function;
 
@@ -9,14 +8,15 @@ import org.jspecify.annotations.Nullable;
 import net.createmod.catnip.api.client.gui.UIRenderHelper;
 import net.createmod.catnip.api.client.gui.element.TextStencilElement;
 import net.createmod.catnip.api.client.gui.widget.AbstractSimiWidget;
-import net.createmod.catnip.config.ui.ConfigTextField;
-import net.createmod.catnip.config.ui.HintableTextFieldWidget;
+import net.createmod.catnip.api.client.config.ConfigTextField;
+import net.createmod.catnip.api.client.config.HintableTextFieldWidget;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.Font;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
@@ -27,18 +27,17 @@ public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
 	protected HintableTextFieldWidget textField;
 
 	@Nullable
-	public static NumberEntry<? extends Number> create(Object type, String label, ModConfigSpec.ConfigValue<?> value, ModConfigSpec.ValueSpec spec) {
+	public static NumberEntry<? extends Number> create(Object type, String label, ModConfigSpec.ConfigValue<?> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
 		return switch (type) {
-			case Integer i -> new IntegerEntry(label, (ModConfigSpec.ConfigValue<Integer>) value, spec);
-			case Float v -> new FloatEntry(label, (ModConfigSpec.ConfigValue<Float>) value, spec);
-			case Double v -> new DoubleEntry(label, (ModConfigSpec.ConfigValue<Double>) value, spec);
+			case Integer i -> new IntegerEntry(label, (ModConfigSpec.ConfigValue<Integer>) value, spec, configType);
+			case Float v -> new FloatEntry(label, (ModConfigSpec.ConfigValue<Float>) value, spec, configType);
+			case Double v -> new DoubleEntry(label, (ModConfigSpec.ConfigValue<Double>) value, spec, configType);
 			default -> null;
 		};
-
 	}
 
-	public NumberEntry(String label, ModConfigSpec.ConfigValue<T> value, ModConfigSpec.ValueSpec spec) {
-		super(label, value, spec);
+	public NumberEntry(String label, ModConfigSpec.ConfigValue<T> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
+		super(label, value, spec, configType);
 		textField = new ConfigTextField(Minecraft.getInstance().font, 0, 0, 200, 20);
 		if (this instanceof IntegerEntry && annotations.containsKey("IntDisplay")) {
 			String intDisplay = annotations.get("IntDisplay");
@@ -55,14 +54,11 @@ public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
 		}
 		textField.setTextColor(UIRenderHelper.COLOR_TEXT.getFirst().getRGB());
 
-		Object range = spec.getRange();
+		// 26.2's Range exposes its bounds, so they no longer need reading reflectively
+		ModConfigSpec.Range<?> range = spec.getRange();
 		try {
-			Field minField = range.getClass().getDeclaredField("min");
-			Field maxField = range.getClass().getDeclaredField("max");
-			minField.setAccessible(true);
-			maxField.setAccessible(true);
-			T min = (T) minField.get(range);
-			T max = (T) maxField.get(range);
+			T min = (T) range.getMin();
+			T max = (T) range.getMax();
 
 			Font font = Minecraft.getInstance().font;
 			if (min.doubleValue() > getTypeMin().doubleValue()) {
@@ -77,7 +73,7 @@ public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
 				maxText.withElementRenderer((ms, width, height, alpha) -> UIRenderHelper.angledGradient(ms, 0, 0, height / 2, height, width, UIRenderHelper.COLOR_TEXT_DARKER));
 				maxOffset = font.width(t);
 			}
-		} catch (NoSuchFieldException | IllegalAccessException | ClassCastException | NullPointerException ignored) {
+		} catch (ClassCastException | NullPointerException ignored) {
 
 		}
 
@@ -137,14 +133,14 @@ public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
 	}
 
 	@Override
-	public void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
-		super.renderContent(graphics, mouseX, mouseY, isHovering, partialTick);
+	public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
+		super.extractContent(graphics, mouseX, mouseY, isHovering, partialTick);
 
 		textField.setX(getX() + getWidth() - 82 - resetWidth);
 		textField.setY(getY() + 8);
 		textField.setWidth(Math.min(getWidth() - getLabelWidth(getWidth()) - resetWidth - minOffset - maxOffset, 40));
 		textField.setHeight(20);
-		textField.render(graphics, mouseX, mouseY, partialTick);
+		textField.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
 		if (minText != null)
 			minText
@@ -160,8 +156,8 @@ public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
 	}
 
 	public static class IntegerEntry extends NumberEntry<Integer> {
-		public IntegerEntry(String label, ModConfigSpec.ConfigValue<Integer> value, ModConfigSpec.ValueSpec spec) {
-			super(label, value, spec);
+		public IntegerEntry(String label, ModConfigSpec.ConfigValue<Integer> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
+			super(label, value, spec, configType);
 		}
 
 		@Override
@@ -192,8 +188,8 @@ public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
 
 	public static class FloatEntry extends NumberEntry<Float> {
 
-		public FloatEntry(String label, ModConfigSpec.ConfigValue<Float> value, ModConfigSpec.ValueSpec spec) {
-			super(label, value, spec);
+		public FloatEntry(String label, ModConfigSpec.ConfigValue<Float> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
+			super(label, value, spec, configType);
 		}
 
 		@Override
@@ -214,8 +210,8 @@ public abstract class NumberEntry<T extends Number> extends ValueEntry<T> {
 
 	public static class DoubleEntry extends NumberEntry<Double> {
 
-		public DoubleEntry(String label, ModConfigSpec.ConfigValue<Double> value, ModConfigSpec.ValueSpec spec) {
-			super(label, value, spec);
+		public DoubleEntry(String label, ModConfigSpec.ConfigValue<Double> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
+			super(label, value, spec, configType);
 		}
 
 		@Override

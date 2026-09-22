@@ -68,6 +68,16 @@ public class NeoForgeClientHooksHelper implements ModClientHooksHelper {
 	}
 
 	@Override
+	public void pushScreenLayer(Screen screen) {
+		Minecraft.getInstance().gui.pushScreenLayer(screen);
+	}
+
+	@Override
+	public void popScreenLayer() {
+		Minecraft.getInstance().gui.popScreenLayer();
+	}
+
+	@Override
 	public boolean isKeyPressed(KeyMapping mapping) {
 		int keyCode = mapping.getKey().getValue();
 		Window window = Minecraft.getInstance().getWindow();

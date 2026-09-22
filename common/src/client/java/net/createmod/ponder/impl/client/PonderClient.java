@@ -14,6 +14,8 @@ import net.createmod.ponder.impl.client.gui.PonderSceneRenderer;
 import net.createmod.ponder.impl.client.plugin.BasePonderPlugin;
 import net.createmod.ponder.impl.client.plugin.DebugPonderPlugin;
 import net.createmod.ponder.impl.client.tooltip.PonderTooltipHandler;
+import net.createmod.catnip.impl.client.placement.PlacementClient;
+import net.createmod.ponder.impl.config.PonderConfig;
 import net.minecraft.world.level.LevelAccessor;
 
 public class PonderClient {
@@ -26,6 +28,10 @@ public class PonderClient {
 		ModClientHooksHelper.INSTANCE.registerPictureInPictureRenderer(PonderSceneRenderState.class, PonderSceneRenderer::new);
 
 		PonderTooltipHandler.init();
+
+		// catnip draws the placement indicator but cannot see Ponder's config, where its settings are
+		PlacementClient.indicatorStyle = () -> PlacementClient.IndicatorStyle.valueOf(PonderConfig.client().placementIndicator.get().name());
+		PlacementClient.indicatorScale = () -> PonderConfig.client().indicatorScale.get();
 
 		// A ponder scene runs on its own clock, so animations inside one follow the scene rather than
 		// the world the player left behind.

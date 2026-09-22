@@ -51,19 +51,7 @@ public final class CatnipNeoforgeClient {
 	}
 
 	private static void loadCompleted(FMLLoadCompleteEvent event) {
-		// FIXME: config
-		// ModContainer modContainer = ModList.get()
-		// 	.getModContainerById(Ponder.MOD_ID)
-		// 	.orElseThrow(() -> new IllegalStateException("Ponder Mod Container missing after loadCompleted"));
-		//
-		// Supplier<IConfigScreenFactory> configScreen = () ->
-		// 	(mc, previousScreen) -> new BaseConfigScreen(previousScreen, Ponder.MOD_ID);
-		// modContainer.registerExtensionPoint(IConfigScreenFactory.class, configScreen);
-		//
-		// BaseConfigScreen.setDefaultActionFor(Ponder.MOD_ID, base -> base
-		// 	.withButtonLabels("Client Settings", null, null)
-		// 	.withSpecs(PonderConfig.client().specification, null, null)
-		// );
+		// Ponder's config screen is registered by Ponder itself, which catnip cannot see
 	}
 
 	public static void afterAtlasStitch(TextureAtlasStitchedEvent event) {

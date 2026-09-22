@@ -96,8 +96,14 @@ public record BoxElementRenderState(
 		return null;
 	}
 
+	/**
+	 * Everything drawn, borders included. 26.2 layers a GUI element above the earlier ones its bounds
+	 * overlap, so bounds that stop at the inner rectangle let an overlapping box land underneath.
+	 */
 	@Override
 	public ScreenRectangle bounds() {
-		return new ScreenRectangle((int) x, (int) y, (int) width, (int) height).transformMaxBounds(pose);
+		float x0 = x - f - 2, y0 = y - f - 2;
+		return new ScreenRectangle((int) Math.floor(x0), (int) Math.floor(y0),
+			(int) Math.ceil(width + 2 * f + 4), (int) Math.ceil(height + 2 * f + 4)).transformMaxBounds(pose);
 	}
 }

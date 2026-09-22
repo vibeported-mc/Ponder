@@ -23,6 +23,9 @@ repositories {
     mavenLocal() // TODO: remove when Flywheel is pushed
     maven("https://maven.createmod.net") // Flywheel
     maven("https://raw.githubusercontent.com/Fuzss/modresources/main/maven/") // Forge Config API Port
+    maven("https://maven.neoforged.net/releases") { // FML, for the common modules' config lookups
+        content { includeGroup("net.neoforged.fancymodloader") }
+    }
 }
 
 java {
@@ -138,24 +141,6 @@ if (name != "common") {
     tasks.withType<JavaCompile> {
         dependsOn(commonOutputs)
     }
-}
-
-// The config *UI* is not ported yet: config still works, it just has no in-game screens. The
-// definitions in api/config (ConfigBase and friends) are what back the TOML files, so they are
-// built - Create declares all of its config through them.
-// TODO: port the config screens and drop these exclusions.
-tasks.withType<JavaCompile> {
-    exclude("**/client/config/**")
-    // ConfigHelper needs FML's ModConfig/ModConfigs, which Forge Config API Port does not provide,
-    // so it cannot live in the common module. Only the config UI, the config command and the config
-    // sync packet use it, and all of those are out with the UI.
-    exclude("**/config/ConfigHelper.java")
-    exclude("**/network/ServerboundConfigPacket.java")
-    exclude("**/ConfigCommand.java")
-    exclude("**/ConfigPathArgument.java")
-    exclude("**/CClient.java")
-    exclude("**/PonderConfig.java")
-    exclude("**/ConfirmationScreen.java")
 }
 
 when (name) {

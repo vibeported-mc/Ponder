@@ -2,11 +2,9 @@ package net.createmod.catnip.api.client.config;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -34,11 +32,11 @@ import net.createmod.catnip.api.client.lang.FontHelper;
 import net.createmod.catnip.api.client.lang.FontHelper.Palette;
 import net.createmod.catnip.api.data.Couple;
 import net.createmod.catnip.api.data.Pair;
-import net.createmod.catnip.api.network.NetworkHelper;
+import net.createmod.catnip.api.client.network.ClientNetworkHelper;
 import net.createmod.catnip.api.theme.Color;
-import net.createmod.catnip.config.ui.ConfigScreenList.LabeledEntry;
+import net.createmod.catnip.api.client.config.ConfigScreenList.LabeledEntry;
 import net.createmod.catnip.impl.network.ServerboundConfigPacket;
-import net.createmod.ponder.enums.PonderGuiTextures;
+import net.createmod.catnip.api.client.gui.texture.CatnipGuiTextures;
 import net.minecraft.ChatFormatting;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.events.GuiEventListener;
@@ -72,18 +70,20 @@ public class SubMenuConfigScreen extends ConfigScreen {
 	protected HintableTextFieldWidget search;
 	protected int listWidth;
 	protected String title;
-	protected Set<String> highlights = new HashSet<>();
+	@Nullable
+	protected String searchText;
+	protected boolean canEdit = true;
 
 	public static SubMenuConfigScreen find(net.createmod.catnip.api.config.ConfigHelper.ConfigPath path) {
 		ModConfigSpec spec = net.createmod.catnip.api.config.ConfigHelper.findModConfigSpecFor(path.getType(), path.getModID());
 		UnmodifiableConfig values = spec.getValues();
-		net.createmod.catnip.config.ui.BaseConfigScreen base = new BaseConfigScreen(null, path.getModID());
+		net.createmod.catnip.api.client.config.BaseConfigScreen base = new BaseConfigScreen(null, path.getModID());
 		SubMenuConfigScreen screen = new SubMenuConfigScreen(base, "root", path.getType(), spec, values);
 		List<String> remainingPath = Lists.newArrayList(path.getPath());
 
 		path:
 		while (!remainingPath.isEmpty()) {
-			String next = remainingPath.remove(0);
+			String next = remainingPath.removeFirst();
 			for (Map.Entry<String, Object> entry : values.valueMap().entrySet()) {
 				String key = entry.getKey();
 				Object obj = entry.getValue();
@@ -91,8 +91,8 @@ public class SubMenuConfigScreen extends ConfigScreen {
 					continue;
 
 				if (!(obj instanceof AbstractConfig)) {
-					//highlight entry
-					screen.highlights.add(path.getPath()[path.getPath().length - 1]);
+					// search for entry
+					screen.searchText = path.getPath()[path.getPath().length - 1];
 					continue;
 				}
 
@@ -142,7 +142,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 
 			if (type == ModConfig.Type.SERVER) {
 				assert ConfigScreen.modID != null;
-				NetworkHelper.INSTANCE.sendToServer(new ServerboundConfigPacket<>(ConfigScreen.modID, path, change.value));
+				ClientNetworkHelper.INSTANCE.sendToServer(new ServerboundConfigPacket<>(ConfigScreen.modID, path, change.value));
 			}
 
 			String command = change.annotations.get("Execute");
@@ -202,7 +202,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 					.open(this)
 			);
 
-		resetAll.showingElement(PonderGuiTextures.ICON_CONFIG_RESET.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(resetAll)));
+		resetAll.showingElement(CatnipGuiTextures.ICON_CONFIG_RESET.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(resetAll)));
 		resetAll.getToolTip().add(Component.translatable("catnip.ui.reset_all_button"));
 		resetAll.getToolTip().addAll(FontHelper.cutTextComponent(Component.translatable("catnip.ui.reset_all_button_tooltip"), Palette.ALL_GRAY));
 
@@ -222,7 +222,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 
 				addAnnotationsToConfirm(confirm).open(this);
 			});
-		saveChanges.showingElement(PonderGuiTextures.ICON_CONFIG_SAVE.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(saveChanges)));
+		saveChanges.showingElement(CatnipGuiTextures.ICON_CONFIG_SAVE.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(saveChanges)));
 		saveChanges.getToolTip().add(Component.translatable("catnip.ui.save_changes_button"));
 		saveChanges.getToolTip().addAll(FontHelper.cutTextComponent(Component.translatable("catnip.ui.save_changes_button_tooltip"), Palette.ALL_GRAY));
 
@@ -241,14 +241,14 @@ public class SubMenuConfigScreen extends ConfigScreen {
 					})
 					.open(this);
 			});
-		discardChanges.showingElement(PonderGuiTextures.ICON_CONFIG_DISCARD.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(discardChanges)));
+		discardChanges.showingElement(CatnipGuiTextures.ICON_CONFIG_DISCARD.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(discardChanges)));
 		discardChanges.getToolTip().add(Component.translatable("catnip.ui.discard_changes_button"));
 		discardChanges.getToolTip().addAll(FontHelper.cutTextComponent(Component.translatable("catnip.ui.discard_changes_button_tooltip"), Palette.ALL_GRAY));
 
 		goBack = new BoxWidget(listL - 30, yCenter + 65, 20, 20)
 			.withPadding(2, 2)
 			.withCallback(this::attemptBackstep);
-		goBack.showingElement(PonderGuiTextures.ICON_CONFIG_BACK.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(goBack)));
+		goBack.showingElement(CatnipGuiTextures.ICON_CONFIG_BACK.asStencil().withElementRenderer(BoxWidget.gradientFactory.apply(goBack)));
 		goBack.getToolTip().add(Component.translatable("catnip.ui.go_back_button"));
 
 		addRenderableWidget(resetAll);
@@ -273,7 +273,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 			if (obj instanceof AbstractConfig) {
 				SubMenuEntry entry = new SubMenuEntry(this, humanKey, spec, (UnmodifiableConfig) obj);
 				entry.path = key;
-				list.children().add(entry);
+				list.addConfigEntry(entry);
 				if (configGroup.valueMap()
 					.size() == 1)
 					ScreenOpener.open(
@@ -281,30 +281,12 @@ public class SubMenuConfigScreen extends ConfigScreen {
 
 			} else if (obj instanceof ModConfigSpec.ConfigValue<?> configValue) {
 				ModConfigSpec.ValueSpec valueSpec = spec.getSpec().getRaw(configValue.getPath());
-				Object value = configValue.get();
-				ConfigScreenList.Entry entry = null;
 
-				if (value instanceof Boolean) {
-					entry = new BooleanEntry(humanKey, (ModConfigSpec.ConfigValue<Boolean>) configValue, valueSpec);
-				} else if (value instanceof Enum) {
-					entry = new EnumEntry(humanKey, (ModConfigSpec.ConfigValue<Enum<?>>) configValue, valueSpec);
-				} else if (value instanceof Number) {
-					entry = NumberEntry.create(value, humanKey, configValue, valueSpec);
-				} else if (value instanceof String) {
-					entry = new StringEntry(humanKey, (ModConfigSpec.ConfigValue<String>) configValue, valueSpec);
-				}
-
-				if (entry == null)
-					entry = new LabeledEntry("Impl missing - " + configValue.get().getClass().getSimpleName() + "  " + humanKey + " : " + value);
-
-				if (highlights.contains(key))
-					entry.annotations.put("highlight", ":)");
-
-				list.children().add(entry);
+				list.addConfigEntry(createEntry(humanKey, configValue, valueSpec));
 			}
 		});
 
-		list.children().sort((e, e2) -> {
+		list.sortEntries((e, e2) -> {
 			int group = (e2 instanceof SubMenuEntry ? 1 : 0) - (e instanceof SubMenuEntry ? 1 : 0);
 			if (group == 0 && e instanceof LabeledEntry le && e2 instanceof LabeledEntry le2) {
 				return le.label.getComponent()
@@ -314,7 +296,16 @@ public class SubMenuConfigScreen extends ConfigScreen {
 			return group;
 		});
 
-		list.search(highlights.stream().findFirst().orElse(""));
+		list.allEntries = new ArrayList<>(list.children());
+
+		List<ConfigScreenList.Entry> deepResults = new ArrayList<>();
+		recursiveCollect(configGroup, "", deepResults);
+		list.deepEntries = deepResults;
+
+		if (searchText != null) {
+			search.setValue(searchText);
+			searchText = null;
+		}
 
 		//extras for server configs
 		if (type != ModConfig.Type.SERVER)
@@ -322,7 +313,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		if (minecraft.hasSingleplayerServer())
 			return;
 
-		boolean canEdit = minecraft.player != null && Commands.LEVEL_GAMEMASTERS.check(minecraft.player.permissions());
+		canEdit = minecraft.player != null && Commands.LEVEL_GAMEMASTERS.check(minecraft.player.permissions());
 
 		Couple<Color> red = AbstractSimiWidget.COLOR_FAIL;
 		Couple<Color> green = AbstractSimiWidget.COLOR_SUCCESS;
@@ -336,13 +327,13 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		if (!canEdit) {
 			list.children().forEach(e -> e.setEditable(false));
 			resetAll.active = false;
-			stencil.withStencilRenderer((ms, w, h, alpha) -> PonderGuiTextures.ICON_CONFIG_LOCKED.render(ms, 0, 0));
+			stencil.withStencilRenderer((ms, w, h, alpha) -> CatnipGuiTextures.ICON_CONFIG_LOCKED.render(ms, 0, 0));
 			stencil.withElementRenderer((ms, w, h, alpha) -> UIRenderHelper.angledGradient(ms, 90, 8, 0, 16, 16, red));
 			serverLocked.withBorderColors(red);
 			serverLocked.getToolTip().add(Component.translatable("catnip.ui.server_config_locked").withStyle(ChatFormatting.BOLD));
 			serverLocked.getToolTip().addAll(FontHelper.cutTextComponent(Component.translatable("catnip.ui.server_config_locked_tooltip"), Palette.ALL_GRAY));
 		} else {
-			stencil.withStencilRenderer((ms, w, h, alpha) -> PonderGuiTextures.ICON_CONFIG_UNLOCKED.render(ms, 0, 0));
+			stencil.withStencilRenderer((ms, w, h, alpha) -> CatnipGuiTextures.ICON_CONFIG_UNLOCKED.render(ms, 0, 0));
 			stencil.withElementRenderer((ms, w, h, alpha) -> UIRenderHelper.angledGradient(ms, 90, 8, 0, 16, 16, green));
 			serverLocked.withBorderColors(green);
 			serverLocked.getToolTip().add(Component.translatable("catnip.ui.server_config_unlocked").withStyle(ChatFormatting.BOLD));
@@ -350,6 +341,39 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		}
 
 		addRenderableWidget(serverLocked);
+	}
+
+	@SuppressWarnings("unchecked")
+	private ConfigScreenList.Entry createEntry(String humanKey, ModConfigSpec.ConfigValue<?> configValue, ModConfigSpec.ValueSpec valueSpec) {
+		Object value = configValue.get();
+
+		if (value instanceof Boolean) {
+			return new BooleanEntry(humanKey, (ModConfigSpec.ConfigValue<Boolean>) configValue, valueSpec, this.type);
+		} else if (value instanceof Enum) {
+			return new EnumEntry(humanKey, (ModConfigSpec.ConfigValue<Enum<?>>) configValue, valueSpec, this.type);
+		} else if (value instanceof Number) {
+			NumberEntry<? extends Number> entry = NumberEntry.create(value, humanKey, configValue, valueSpec, this.type);
+			if (entry != null)
+				return entry;
+		} else if (value instanceof String) {
+			return new StringEntry(humanKey, (ModConfigSpec.ConfigValue<String>) configValue, valueSpec, this.type);
+		}
+
+		return new LabeledEntry("Impl missing - " + configValue.get().getClass().getSimpleName() + "  " + humanKey + " : " + value);
+	}
+
+	private List<ConfigScreenList.Entry> recursiveCollect(UnmodifiableConfig config, String prefix, List<ConfigScreenList.Entry> results) {
+		config.valueMap().forEach((key, obj) -> {
+			String fullPath = prefix.isEmpty() ? key : prefix + "." + key;
+			if (obj instanceof AbstractConfig) {
+				recursiveCollect((UnmodifiableConfig) obj, fullPath, results);
+			} else if (obj instanceof ModConfigSpec.ConfigValue<?> configValue) {
+				String humanKey = toHumanReadable(key);
+				ModConfigSpec.ValueSpec valueSpec = spec.getSpec().getRaw(configValue.getPath());
+				results.add(createEntry(humanKey, configValue, valueSpec));
+			}
+		});
+		return results;
 	}
 
 	@Override
@@ -367,7 +391,7 @@ public class SubMenuConfigScreen extends ConfigScreen {
 
 	@Override
 	public void resize(int width, int height) {
-		double scroll = list.scrollBarX();
+		double scroll = list.scrollAmount();
 		init(width, height);
 		list.setScrollAmount(scroll);
 	}
@@ -403,8 +427,10 @@ public class SubMenuConfigScreen extends ConfigScreen {
 		if (list.search(search)) {
 			this.search.setTextColor(UIRenderHelper.COLOR_TEXT.getFirst().getRGB());
 		} else {
-			this.search.setTextColor(AbstractSimiWidget.COLOR_SUCCESS.getFirst().getRGB());
+			this.search.setTextColor(AbstractSimiWidget.COLOR_FAIL.getFirst().getRGB());
 		}
+		if (!canEdit)
+			list.children().forEach(e -> e.setEditable(false));
 	}
 
 	private void attemptBackstep() {

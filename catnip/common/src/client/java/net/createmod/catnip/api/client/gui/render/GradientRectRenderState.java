@@ -13,7 +13,8 @@ import net.minecraft.client.renderer.state.gui.GuiElementRenderState;
 import net.minecraft.client.renderer.RenderPipelines;
 
 public record GradientRectRenderState(
-	Matrix3x2f pose, float left, float top, float right, float bottom, Color startColor, Color endColor
+	Matrix3x2f pose, float left, float top, float right, float bottom, Color startColor, Color endColor,
+	@Nullable ScreenRectangle scissorArea
 ) implements GuiElementRenderState {
 	@Override
 	public RenderPipeline pipeline() {
@@ -34,12 +35,8 @@ public record GradientRectRenderState(
 	}
 
 	@Override
-	public @Nullable ScreenRectangle scissorArea() {
-		return null;
-	}
-
-	@Override
-	public ScreenRectangle bounds() {
-		return new ScreenRectangle((int) left, (int) top, (int) (right - left), (int) (bottom - top)).transformMaxBounds(pose);
+	public @Nullable ScreenRectangle bounds() {
+		ScreenRectangle bounds = new ScreenRectangle((int) left, (int) top, (int) (right - left), (int) (bottom - top)).transformMaxBounds(pose);
+		return scissorArea != null ? scissorArea.intersection(bounds) : bounds;
 	}
 }

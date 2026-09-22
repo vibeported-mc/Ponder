@@ -8,6 +8,9 @@ dependencies {
     compileOnly(libs.bundles.mixin)
     compileOnlyApi(project(":catnip:common"))
     clientCompileOnly(project(":catnip:common", configuration = "clientJar"))
+    // PonderConfig is declared through catnip's ConfigBase, whose config types these provide.
+    compileOnly(libs.forgeconfigapiport.common)
+    compileOnly(libs.fml.loader) { isTransitive = false }
 }
 
 loom {

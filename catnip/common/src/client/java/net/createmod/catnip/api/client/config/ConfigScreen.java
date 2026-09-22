@@ -9,16 +9,11 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.util.TriConsumer;
 import org.joml.Matrix3x2fStack;
 import org.jspecify.annotations.Nullable;
-import org.lwjgl.opengl.GL30;
-
-import com.mojang.blaze3d.opengl.GlStateManager;
 
 import net.createmod.catnip.api.animation.Force;
 import net.createmod.catnip.api.animation.PhysicalFloat;
 import net.createmod.catnip.api.client.gui.AbstractSimiScreen;
-import net.createmod.catnip.api.client.gui.element.DelegatedStencilElement;
 import net.createmod.catnip.api.client.gui.element.GuiGameElement;
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
@@ -35,10 +30,8 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 	protected final Screen parent;
 
 	public static BlockState shadowState = Blocks.POTTED_CRIMSON_ROOTS.defaultBlockState();
-	public static DelegatedStencilElement shadowElement = new DelegatedStencilElement(
-		(graphics, x, y, alpha) -> renderCog(graphics),
-		(graphics, x, y, alpha) -> graphics.fill(-200, -200, 200, 200, 0x60_000000)
-	);
+	/** How dark the spinning shadow behind every config screen is drawn. */
+	public static int shadowColor = 0x60_000000;
 
 	public ConfigScreen(@Nullable Screen parent) {
 		super(Component.empty());
@@ -52,32 +45,28 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 	}
 
 	@Override
-	public void extractBackground(GuiGraphicsExtractor guiGraphics, int mouseX, int mouseY, float partialTick) {
+	public void extractBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTick) {
 	}
 
 	@Override
-	protected void extractMenuBackground(GuiGraphicsExtractor graphics, int x, int y, int width, int height) {
+	protected void renderWindowBackground(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 		if (this.minecraft.level != null) {
 			//in game
 			graphics.fill(0, 0, this.width, this.height, 0xb0_282c34);
 		} else {
 			//in menus
-			extractMenuBackground(graphics);
+			renderMenuBackground(graphics, partialTicks);
 		}
 
-		shadowElement
-			.at(width * 0.5f, height * 0.5f, 0)
-			.submit(graphics);
+		Matrix3x2fStack poseStack = graphics.pose();
+		poseStack.pushMatrix();
+		poseStack.translate(width * 0.5f, height * 0.5f);
+		renderCog(graphics, partialTicks);
+		poseStack.popMatrix();
 
-		super.extractMenuBackground(graphics, x, y, width, height);
-
+		super.renderWindowBackground(graphics, mouseX, mouseY, partialTicks);
 	}
 
-	@Override
-	protected void prepareFrame() {
-		GlStateManager._clear(GL30.GL_STENCIL_BUFFER_BIT | GL30.GL_DEPTH_BUFFER_BIT);
-	}
-	
 	@Override
 	protected void renderWindow(GuiGraphicsExtractor graphics, int mouseX, int mouseY, float partialTicks) {
 	}
@@ -108,22 +97,26 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 	 * {@code backgrounds} Map in this Class with your modID as the key.
 	 */
 	protected void renderMenuBackground(GuiGraphicsExtractor graphics, float partialTicks) {
-		TriConsumer<Screen, GuiGraphics, Float> customBackground = backgrounds.get(modID);
+		TriConsumer<Screen, GuiGraphicsExtractor, Float> customBackground = backgrounds.get(modID);
 		if (customBackground != null) {
 			customBackground.accept(this, graphics, partialTicks);
 			return;
 		}
 
-		Minecraft.getInstance()
-			.gameRenderer
-			.getPanorama()
-			.render(graphics, this.width, this.height, true);
+		this.minecraft.gameRenderer.panorama().extractRenderState(graphics, this.width, this.height);
 
 		graphics.fill(0, 0, this.width, this.height, 0x90_282c34);
 	}
 
-	protected static void renderCog(GuiGraphicsExtractor graphics) {
-		float partialTicks = Minecraft.getInstance().getDeltaTracker().getGameTimeDeltaPartialTick(false);
+	/**
+	 * The shadow of a slowly turning block behind the screen.
+	 *
+	 * <h2>26.2 note</h2>
+	 * <p>1.21.1 drew the block into the stencil buffer and filled through it. A block in a 26.2 GUI
+	 * is drawn offscreen and blitted in, and tinting that blit black does the same job: the result is
+	 * the block's silhouette at {@link #shadowColor}.
+	 */
+	protected static void renderCog(GuiGraphicsExtractor graphics, float partialTicks) {
 		Matrix3x2fStack poseStack = graphics.pose();
 		poseStack.pushMatrix();
 
@@ -131,6 +124,7 @@ public abstract class ConfigScreen extends AbstractSimiScreen {
 		poseStack.scale(200, 200);
 		GuiGameElement.of(shadowState)
 			.rotateBlock(22.5, cogSpin.getValue(partialTicks), 22.5)
+			.tintResult(shadowColor)
 			.submit(graphics);
 
 		poseStack.popMatrix();

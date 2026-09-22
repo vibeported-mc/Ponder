@@ -24,6 +24,7 @@ import com.mojang.blaze3d.platform.Window;
 import com.mojang.blaze3d.systems.RenderSystem;
 import com.mojang.math.Constants;
 
+import net.createmod.ponder.impl.config.PonderConfig;
 import net.createmod.catnip.api.animation.LerpedFloat;
 import net.createmod.catnip.api.animation.LerpedFloat.Chaser;
 import net.createmod.catnip.api.client.animation.AnimationTickHolder;
@@ -1084,12 +1085,10 @@ public class PonderUI extends AbstractPonderScreen {
 	}
 
 	public boolean isComfyReadingEnabled() {
-		// FIXME: config
-		return false;//PonderConfig.client().comfyReading.get();
+		return PonderConfig.client().comfyReading.get();
 	}
 
 	public void setComfyReadingEnabled(boolean slowTextMode) {
-		// FIXME: config
-		//PonderConfig.client().comfyReading.set(slowTextMode);
+		PonderConfig.client().comfyReading.set(slowTextMode);
 	}
 }

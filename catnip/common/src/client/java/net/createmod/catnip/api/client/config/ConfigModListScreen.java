@@ -56,8 +56,8 @@ public class ConfigModListScreen extends ConfigScreen {
 
 			return e1.id.compareToIgnoreCase(e2.id);
 		});
-		list.children().clear();
-		list.children().addAll(allEntries);
+		list.clearEntries();
+		allEntries.forEach(list::addConfigEntry);
 
 		goBack = new BoxWidget(width / 2 - listWidth / 2 - 30, height / 2 + 65, 20, 20).withPadding(2, 2)
 			.withCallback(() -> ScreenOpener.open(parent));
@@ -103,15 +103,15 @@ public class ConfigModListScreen extends ConfigScreen {
 		assert list != null;
 		assert this.search != null;
 
-		list.children().clear();
+		list.clearEntries();
 		//todo include display names in search
 		for (ModEntry modEntry : allEntries) {
 			if (modEntry.id.contains(search.toLowerCase(Locale.ROOT))) {
-				list.children().add(modEntry);
+				list.addConfigEntry(modEntry);
 			}
 		}
 
-		list.setScrollAmount(list.scrollAmount());
+		list.setScrollAmount(0);
 		if (!list.children().isEmpty()) {
 			this.search.setTextColor(UIRenderHelper.COLOR_TEXT.getFirst().getRGB());
 		} else {
@@ -156,8 +156,8 @@ public class ConfigModListScreen extends ConfigScreen {
 		}
 
 		@Override
-		public void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
-			super.renderContent(graphics, mouseX, mouseY, isHovering, partialTick);
+		public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
+			super.extractContent(graphics, mouseX, mouseY, isHovering, partialTick);
 
 			button.setX(getX() + getWidth() - 108);
 			button.setY(getY() + 10);

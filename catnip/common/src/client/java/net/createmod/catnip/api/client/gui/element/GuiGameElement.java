@@ -67,6 +67,7 @@ public class GuiGameElement {
         protected double viewXRot, viewYRot, viewZRot;
         protected double scale = 1;
         protected int color = 0xFFFFFF;
+        protected int blitColor = -1;
         protected Vector2f rotationOffset = new Vector2f();
         protected float rotationOffsetZ;
 
@@ -114,6 +115,15 @@ public class GuiGameElement {
 
         public GuiRenderBuilder color(int color) {
             this.color = color;
+            return this;
+        }
+
+        /**
+         * Tints the rendered element as a whole, alpha included, rather than the model's faces --
+         * a translucent black draws its silhouette as a shadow. Only block models take this.
+         */
+        public GuiRenderBuilder tintResult(int argb) {
+            this.blitColor = argb;
             return this;
         }
 
@@ -232,6 +242,7 @@ public class GuiGameElement {
 					new Matrix3x2f(graphics.pose()),
 					elementTransform(),
 					ARGB.color(255, color),
+					blitColor,
 					GuiElementTransform.boxMin(scale), GuiElementTransform.boxMin(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.boxMax(scale), GuiElementTransform.unitsPerBlock(scale),
 					null, null
 				)

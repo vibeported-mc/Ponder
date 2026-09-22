@@ -113,7 +113,8 @@ public class UIRenderHelper {
 			right,
 			bottom,
 			startColor,
-			endColor
+			endColor,
+			getScissor(graphics)
 		));
 	}
 

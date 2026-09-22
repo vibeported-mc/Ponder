@@ -7,11 +7,12 @@ import net.createmod.catnip.api.client.gui.element.BoxElement;
 import net.createmod.catnip.api.client.gui.element.DelegatedStencilElement;
 import net.createmod.catnip.api.client.gui.element.TextStencilElement;
 import net.createmod.catnip.api.client.gui.widget.BoxWidget;
-import net.createmod.catnip.config.ui.ConfigScreen;
-import net.createmod.ponder.enums.PonderGuiTextures;
+import net.createmod.catnip.api.client.config.ConfigScreen;
+import net.createmod.catnip.api.client.gui.texture.CatnipGuiTextures;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class EnumEntry extends ValueEntry<Enum<?>> {
@@ -22,21 +23,21 @@ public class EnumEntry extends ValueEntry<Enum<?>> {
 	protected BoxWidget cycleLeft;
 	protected BoxWidget cycleRight;
 
-	public EnumEntry(String label, ModConfigSpec.ConfigValue<Enum<?>> value, ModConfigSpec.ValueSpec spec) {
-		super(label, value, spec);
+	public EnumEntry(String label, ModConfigSpec.ConfigValue<Enum<?>> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
+		super(label, value, spec, configType);
 
 		valueText = new TextStencilElement(Minecraft.getInstance().font, "YEP").centered(true, true);
 		valueText.withElementRenderer((ms, width, height, alpha) -> UIRenderHelper.angledGradient(ms, 0, 0, height / 2,
 			height, width, UIRenderHelper.COLOR_TEXT));
 
-		DelegatedStencilElement l = PonderGuiTextures.ICON_CONFIG_PREV.asStencil();
+		DelegatedStencilElement l = CatnipGuiTextures.ICON_CONFIG_PREV.asStencil();
 		cycleLeft = new BoxWidget(0, 0, cycleWidth + 8, 16)
 			.withCustomBackground(BoxElement.COLOR_BACKGROUND_FLAT)
 			.showingElement(l)
 			.withCallback(() -> cycleValue(-1));
 		l.withElementRenderer(BoxWidget.gradientFactory.apply(cycleLeft));
 
-		DelegatedStencilElement r = PonderGuiTextures.ICON_CONFIG_NEXT.asStencil();
+		DelegatedStencilElement r = CatnipGuiTextures.ICON_CONFIG_NEXT.asStencil();
 		cycleRight = new BoxWidget(0, 0, cycleWidth + 8, 16)
 			.withCustomBackground(BoxElement.COLOR_BACKGROUND_FLAT)
 			.showingElement(r)
@@ -76,26 +77,28 @@ public class EnumEntry extends ValueEntry<Enum<?>> {
 	}
 
 	@Override
-	public void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
-		super.renderContent(graphics, mouseX, mouseY, isHovering, partialTick);
+	public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
+		super.extractContent(graphics, mouseX, mouseY, isHovering, partialTick);
 
+		// 26.2 has no z to lift the value above the buttons it overlaps, only draw order: the buttons,
+		// then the box bridging them, then the value on top
 		cycleLeft.setX(getX() + getLabelWidth(getWidth()) + 4);
 		cycleLeft.setY(getY() + 10);
-		cycleLeft.render(graphics, mouseX, mouseY, partialTick);
-
-		valueText.at(cycleLeft.getX() + cycleWidth - 8, getY() + 10, 200)
-			.withBounds(getWidth() - getLabelWidth(getWidth()) - 2 * cycleWidth - resetWidth - 4, 16)
-			.submit(graphics);
+		cycleLeft.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
 		cycleRight.setX(getX() + getWidth() - cycleWidth * 2 - resetWidth + 10);
 		cycleRight.setY(getY() + 10);
-		cycleRight.render(graphics, mouseX, mouseY, partialTick);
+		cycleRight.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
 		new BoxElement()
 			.withBackground(BoxElement.COLOR_BACKGROUND_FLAT)
 			.flatBorder(0x01_000000)
 			.withBounds(48, 6)
 			.at(cycleLeft.getX() + 22, cycleLeft.getY() + 5)
+			.submit(graphics);
+
+		valueText.at(cycleLeft.getX() + cycleWidth - 8, getY() + 10, 0)
+			.withBounds(getWidth() - getLabelWidth(getWidth()) - 2 * cycleWidth - resetWidth - 4, 16)
 			.submit(graphics);
 	}
 

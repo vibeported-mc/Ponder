@@ -1,18 +1,19 @@
 package net.createmod.catnip.api.client.config.entries;
 
-import net.createmod.catnip.config.ui.ConfigTextField;
+import net.createmod.catnip.api.client.config.ConfigTextField;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 import net.minecraft.client.gui.components.EditBox;
 
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class StringEntry extends ValueEntry<String> {
 
 	protected EditBox textField;
 
-	public StringEntry(String label, ModConfigSpec.ConfigValue<String> value, ModConfigSpec.ValueSpec spec) {
-		super(label, value, spec);
+	public StringEntry(String label, ModConfigSpec.ConfigValue<String> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
+		super(label, value, spec, configType);
 		textField = new ConfigTextField(Minecraft.getInstance().font, 0, 0, 200, 20);
 		textField.setValue(value.get());
 
@@ -24,13 +25,13 @@ public class StringEntry extends ValueEntry<String> {
 	}
 
 	@Override
-	public void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
-		super.renderContent(graphics, mouseX, mouseY, isHovering, partialTick);
+	public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
+		super.extractContent(graphics, mouseX, mouseY, isHovering, partialTick);
 
 		textField.setX(getX() + getWidth() - 82 - resetWidth);
 		textField.setY(getY() + 8);
 		textField.setWidth(Math.min(getWidth() - getLabelWidth(getWidth()) - resetWidth, 60));
-		textField.render(graphics, mouseX, mouseY, partialTick);
+		textField.extractRenderState(graphics, mouseX, mouseY, partialTick);
 
 	}
 

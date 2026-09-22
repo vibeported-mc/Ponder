@@ -42,6 +42,14 @@ public interface ModClientHooksHelper {
 
 	Minecraft getMinecraftFromScreen(Screen screen);
 
+	/**
+	 * Opens a screen over the current one without closing it: the one underneath keeps its state
+	 * and is still drawn behind. {@link #popScreenLayer()} returns to it.
+	 */
+	void pushScreenLayer(Screen screen);
+
+	void popScreenLayer();
+
 	// note: implementations don't use isDown since we need this to work inside screens
 	boolean isKeyPressed(KeyMapping mapping);
 

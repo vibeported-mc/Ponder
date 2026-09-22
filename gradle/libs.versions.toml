@@ -18,6 +18,9 @@ mixin-extras = "0.5.4"
 # https://github.com/Fuzss/forgeconfigapiport
 # Gives the common module a ModConfigSpec to compile the config definitions against.
 forgeconfigapiport = "26.2.1"
+# The FML that NeoForge 26.2 ships. ConfigHelper finds a mod's configs through ModConfig/ModConfigs,
+# which the port does not carry, so the common modules compile against the loader itself.
+fml-loader = "11.0.16"
 
 [libraries]
 minecraft = { module = "com.mojang:minecraft", version.ref = "minecraft" }
@@ -26,6 +29,7 @@ fabric-api = { module = "net.fabricmc.fabric-api:fabric-api", version.ref = "fab
 mixin = { module = "net.fabricmc:sponge-mixin", version.ref = "mixin" }
 mixin-extras = { module = "io.github.llamalad7:mixinextras-common", version.ref = "mixin-extras" }
 forgeconfigapiport-common = { module = "fuzs.forgeconfigapiport:forgeconfigapiport-common-neoforgeapi", version.ref = "forgeconfigapiport" }
+fml-loader = { module = "net.neoforged.fancymodloader:loader", version.ref = "fml-loader" }
 
 flywheel-neoforge-api = { module = "dev.engine-room.flywheel:flywheel-neoforge-api-26.2", version.ref = "flywheel" }
 flywheel-neoforge = { module = "dev.engine-room.flywheel:flywheel-neoforge-26.2", version.ref = "flywheel" }

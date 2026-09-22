@@ -4,9 +4,10 @@ import net.createmod.catnip.api.client.gui.UIRenderHelper;
 import net.createmod.catnip.api.client.gui.element.RenderElement;
 import net.createmod.catnip.api.client.gui.widget.AbstractSimiWidget;
 import net.createmod.catnip.api.client.gui.widget.BoxWidget;
-import net.createmod.ponder.enums.PonderGuiTextures;
+import net.createmod.catnip.api.client.gui.texture.CatnipGuiTextures;
 import net.minecraft.client.gui.GuiGraphicsExtractor;
 
+import net.neoforged.fml.config.ModConfig;
 import net.neoforged.neoforge.common.ModConfigSpec;
 
 public class BooleanEntry extends ValueEntry<Boolean> {
@@ -15,14 +16,14 @@ public class BooleanEntry extends ValueEntry<Boolean> {
 	RenderElement disabled;
 	BoxWidget button;
 
-	public BooleanEntry(String label, ModConfigSpec.ConfigValue<Boolean> value, ModConfigSpec.ValueSpec spec) {
-		super(label, value, spec);
+	public BooleanEntry(String label, ModConfigSpec.ConfigValue<Boolean> value, ModConfigSpec.ValueSpec spec, ModConfig.Type configType) {
+		super(label, value, spec, configType);
 
-		enabled = PonderGuiTextures.ICON_CONFIRM.asStencil()
+		enabled = CatnipGuiTextures.ICON_CONFIRM.asStencil()
 			.withElementRenderer((ms, width, height, alpha) -> UIRenderHelper.angledGradient(ms, 0, 0, height / 2, height, width, AbstractSimiWidget.COLOR_SUCCESS))
 			.at(10, 0);
 
-		disabled = PonderGuiTextures.ICON_DISABLE.asStencil()
+		disabled = CatnipGuiTextures.ICON_DISABLE.asStencil()
 			.withElementRenderer((ms, width, height, alpha) -> UIRenderHelper.angledGradient(ms, 0, 0, height / 2, height, width, AbstractSimiWidget.COLOR_FAIL))
 			.at(10, 0);
 
@@ -46,14 +47,14 @@ public class BooleanEntry extends ValueEntry<Boolean> {
 	}
 
 	@Override
-	public void renderContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
-		super.renderContent(graphics, mouseX, mouseY, isHovering, partialTick);
+	public void extractContent(GuiGraphicsExtractor graphics, int mouseX, int mouseY, boolean isHovering, float partialTick) {
+		super.extractContent(graphics, mouseX, mouseY, isHovering, partialTick);
 
 		button.setX(getX() + getWidth() - 80 - resetWidth);
 		button.setY(getY() + 10);
 		button.setWidth(35);
 		button.setHeight(getHeight() - 20);
-		button.render(graphics, mouseX, mouseY, partialTick);
+		button.extractRenderState(graphics, mouseX, mouseY, partialTick);
 	}
 
 	@Override
