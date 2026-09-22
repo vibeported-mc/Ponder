@@ -111,6 +111,10 @@ public abstract class NavigatableSimiScreen extends AbstractSimiScreen {
 		// see the docs on getGuiPartialTicks for why this is used
 		float progress = transition.getValue(AnimationTickHolder.getGuiPartialTicks());
 		float scale = progress > 0 ? 1 - 0.5f * (1 - progress) : 1 + .5f * (1 + progress);
+		// Only a running transition scales, as in 1.21.1: a screen opened without one sits at a
+		// progress of 0, which the formula above would otherwise hold at 1.5 for good.
+		if (transition.getChaseTarget() == 0 || transition.settled())
+			scale = 1;
 
 		Matrix3x2fStack transforms = graphics.pose();
 		transforms.pushMatrix();
